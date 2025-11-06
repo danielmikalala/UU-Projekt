@@ -25,6 +25,7 @@ Then the dev server should start and you are ready to go with your next move!
 
 <i style="color : red">General Rule: Ask first and then do when something not clear.</i>
 
+<i style="color : green">Important!🤮🤢 Do not be stinky... (just for test and fun - branch rules)</i>
 ## 🌱 Branching & Development Workflow
 
 To maintain code quality and consistent delivery, we follow a structured branching workflow:
