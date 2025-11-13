@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import PrimaryButton from "./buttons/PrimaryButton";
+import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import {
   GearIcon,
   CollectionIcon,
