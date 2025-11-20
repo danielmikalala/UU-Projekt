@@ -21,5 +21,5 @@ export default function AppRouter() {
         </Routes>
       </div>
     </BrowserRouter>
-  );
+  );   
 }
