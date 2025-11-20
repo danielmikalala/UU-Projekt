@@ -1,6 +1,6 @@
 import React from "react";
-import AuthScreen from "../components/AuthScreen.jsx";
+import AuthForm from "../components/AuthForm.jsx";
 
 export default function AuthPage() {
-  return <AuthScreen />;
+  return <AuthForm />;
 }

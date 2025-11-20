@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
-export default function AuthScreen() {
+export default function AuthForm() {
   const [mode, setMode] = useState("login");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
@@ -50,8 +50,12 @@ export default function AuthScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">CrowdFund</h1>
-        <p className="mt-1 text-sm text-gray-500">Login or create an account to get started</p>
+
+        {/* Centered text */}
+        <h1 className="text-2xl font-bold text-gray-900 text-center">CrowdFund</h1>
+        <p className="mt-1 text-sm text-gray-500 text-center">
+          Login or create an account to get started
+        </p>
 
         <div className="mt-6 flex rounded-md border border-gray-200 bg-gray-100 p-1 text-sm font-medium">
           <button

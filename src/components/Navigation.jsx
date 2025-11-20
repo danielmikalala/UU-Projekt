@@ -12,10 +12,6 @@ export default function Navigation() {
     navigate("/auth", { replace: true });
   };
 
-  const handleCreateCampaign = () => {
-    navigate("/admin");
-  };
-
   if (!isAuthenticated) return null;
 
   return (
@@ -25,15 +21,23 @@ export default function Navigation() {
           <Link to="/home" className="text-gray-900 no-underline">CrowdFund</Link>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500 mr-1">{user?.name}</span>
+          <span className="text-sm text-gray-500 mr-1">{user?.name || user?.email || "User"}</span>
+
           <Link to="/admin" className="no-underline">
             <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
           </Link>
+
           <Link to="/managed" className="no-underline">
             <PrimaryButton icon={<CollectionIcon />}>My Campaigns</PrimaryButton>
           </Link>
-          <PrimaryButton onClick={handleCreateCampaign} icon={<PlusIcon />}>Create</PrimaryButton>
-          <PrimaryButton onClick={handleLogout} icon={<LogoutIcon />}>Logout</PrimaryButton>
+
+          <Link to="/admin" className="no-underline">
+            <PrimaryButton icon={<PlusIcon />}>Create</PrimaryButton>
+          </Link>
+
+          <PrimaryButton onClick={handleLogout} aria-label="Logout" icon={<LogoutIcon />}>
+            Logout
+          </PrimaryButton>
         </div>
       </div>
     </nav>
