@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { loginBasic, registerBasic } from "../api/authApi.js";
 
 const AuthContext = createContext(null);
 
@@ -20,29 +21,37 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (credentials) => {
-    const { email } = credentials;
-    const fakeUser = { id: 1, name: email.split("@")[0] || "User", email };
-    const fakeToken = "fake-jwt-token";
+  const login = async ({ email, password }) => {
+    const data = await loginBasic({ email, password });
 
-    setToken(fakeToken);
-    setUser(fakeUser);
-    localStorage.setItem("authToken", fakeToken);
-    localStorage.setItem("authUser", JSON.stringify(fakeUser));
+    const userObj = {
+      email: data.email ?? email,
+      role: data.role,
+    };
 
-    return { user: fakeUser, token: fakeToken };
+    setToken(data.token);
+    setUser(userObj);
+    localStorage.setItem("authToken", data.token);
+    localStorage.setItem("authUser", JSON.stringify(userObj));
+
+    return { user: userObj, token: data.token };
   };
 
-  const register = async (data) => {
-    const { name } = data;
+  const register = async ({ name, email, password }) => {
+    const data = await registerBasic({ name, email, password });
 
-    const result = await login(data);
-    const updatedUser = { ...(result.user ?? {}), name: name || result.user.name };
+    const userObj = {
+      email: data.email ?? email,
+      name: name || data.name || (email ? email.split("@")[0] : "User"),
+      role: data.role,
+    };
 
-    setUser(updatedUser);
-    localStorage.setItem("authUser", JSON.stringify(updatedUser));
+    setToken(data.token);
+    setUser(userObj);
+    localStorage.setItem("authToken", data.token);
+    localStorage.setItem("authUser", JSON.stringify(userObj));
 
-    return { ...result, user: updatedUser };
+    return { user: userObj, token: data.token };
   };
 
   const logout = () => {
@@ -52,7 +61,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("authUser");
   };
 
-  const value = { token, user, isAuthenticated: !!token, login, register, logout };
+  const value = {
+    token,
+    user,
+    isAuthenticated: !!token,
+    login,
+    register,
+    logout,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -35,9 +35,7 @@ export default function Navigation() {
             <PrimaryButton icon={<PlusIcon />}>Create</PrimaryButton>
           </Link>
 
-          <PrimaryButton onClick={handleLogout} aria-label="Logout" icon={<LogoutIcon />}>
-            Logout
-          </PrimaryButton>
+          <PrimaryButton onClick={handleLogout} aria-label="Logout" icon={<LogoutIcon />}>Logout</PrimaryButton>
         </div>
       </div>
     </nav>

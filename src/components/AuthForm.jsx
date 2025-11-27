@@ -23,6 +23,7 @@ export default function AuthForm() {
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
+    console.log("LOGIN SUBMIT CLICKED", loginForm);
     setIsSubmitting(true);
     try {
       await login(loginForm);
@@ -36,6 +37,7 @@ export default function AuthForm() {
 
   const handleRegisterSubmit = async (event) => {
     event.preventDefault();
+    console.log("REGISTER SUBMIT CLICKED", registerForm);
     setIsSubmitting(true);
     try {
       await register(registerForm);
@@ -50,8 +52,6 @@ export default function AuthForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-
-        {/* Centered text */}
         <h1 className="text-2xl font-bold text-gray-900 text-center">CrowdFund</h1>
         <p className="mt-1 text-sm text-gray-500 text-center">
           Login or create an account to get started
@@ -72,9 +72,7 @@ export default function AuthForm() {
             onClick={() => setMode("register")}
             className={`flex-1 rounded-md px-3 py-2 transition-colors ${
               !isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Register
+            }`}> Register
           </button>
         </div>
 
@@ -87,8 +85,7 @@ export default function AuthForm() {
                 required
                 value={loginForm.email}
                 onChange={(e) => handleLoginChange("email", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
-              />
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"/>
             </div>
 
             <div className="space-y-1 text-left">
@@ -98,8 +95,7 @@ export default function AuthForm() {
                 required
                 value={loginForm.password}
                 onChange={(e) => handleLoginChange("password", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
-              />
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"/>
             </div>
 
             <PrimaryButton
@@ -119,8 +115,7 @@ export default function AuthForm() {
                 required
                 value={registerForm.name}
                 onChange={(e) => handleRegisterChange("name", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
-              />
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"/>
             </div>
 
             <div className="space-y-1 text-left">
@@ -130,8 +125,7 @@ export default function AuthForm() {
                 required
                 value={registerForm.email}
                 onChange={(e) => handleRegisterChange("email", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
-              />
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"/>
             </div>
 
             <div className="space-y-1 text-left">
@@ -141,8 +135,7 @@ export default function AuthForm() {
                 required
                 value={registerForm.password}
                 onChange={(e) => handleRegisterChange("password", e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
-              />
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"/>
             </div>
 
             <PrimaryButton
