@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
+import AdminCampaigns from "./AdminCampaigns.jsx";
 
 const TABS = [
   { id: "campaigns", label: "Campaigns" },
@@ -167,11 +168,7 @@ export default function AdminPanelList() {
         </section>
       )}
 
-      {activeTab === "campaigns" && (
-        <section className="mt-8 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
-          Campaign management is coming soon.
-        </section>
-      )}
+      {activeTab === "campaigns" && <AdminCampaigns />}
 
       {activeTab === "users" && (
         <section className="mt-8 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
