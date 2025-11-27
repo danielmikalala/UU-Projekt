@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import DetailPage from "./pages/DetailPage.jsx";
 import CampaignAdminPanelPage from "./pages/CampaignAdminPanelPage.jsx";
+import ManagedCampaignsPage from "./pages/ManagedCampaignsPage.jsx";
 
 export default function AppRouter() {
     return (
@@ -16,6 +17,7 @@ export default function AppRouter() {
                     <Route path="*" element={<Navigate to="/home" replace/>}/>
                     <Route path="/home" element={<HomePage/>}/>
                     <Route path="/admin" element={<AdminPage/>}/>
+                    <Route path="/managed" element={<ManagedCampaignsPage/>}/>
                     <Route path="/campaign-admin/:id" element={<CampaignAdminPanelPage/>}/>
                     <Route path="/detail/:id" element={<DetailPage/>}/>
                 </Routes>
