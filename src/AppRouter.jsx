@@ -7,6 +7,7 @@ import DetailPage from "./pages/DetailPage.jsx";
 import CampaignAdminPanelPage from "./pages/CampaignAdminPanelPage.jsx";
 import ManagedCampaignsPage from "./pages/ManagedCampaignsPage.jsx";
 
+
 export default function AppRouter() {
     return (
         <BrowserRouter>
