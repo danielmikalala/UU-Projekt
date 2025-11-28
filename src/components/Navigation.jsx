@@ -1,5 +1,4 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import {
   GearIcon,
@@ -7,9 +6,18 @@ import {
   PlusIcon,
   LogoutIcon,
 } from "./buttons/icons";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Navigation() {
-  const handleLogout = () => {};
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  if (!isAuthenticated) return null;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/auth", { replace: true });
+  };
 
   const handleCreateCampaign = () => {};
 
@@ -22,7 +30,9 @@ export default function Navigation() {
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500 mr-1">username</span>
+          <span className="text-sm text-gray-500 mr-1">
+            {user?.name || user?.email || "User"}
+          </span>
           <Link to="/admin" className="no-underline">
             <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
           </Link>
