@@ -16,6 +16,10 @@ export default defineConfig({
             "/project": {
                 target: "http://localhost",
                 changeOrigin: true,
+            },
+            "/categories": {
+                target: "http://localhost",
+                changeOrigin: true,
             }
         }
     }
