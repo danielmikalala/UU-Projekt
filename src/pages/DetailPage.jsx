@@ -29,16 +29,17 @@ export default function DetailPage() {
         });
 
     }, [id]);
-    //todo: change to actual goal state
+
     return (
         <div className="min-h-screen py-10 space-y-8">
             <GoBackButton/>
             <DonatePanel goal={detailData.goalAmount} currentState={detailData.goalAmount / 2}/>
-            <DetailPageHeader/>
-            <AboutPanel/>
+            <DetailPageHeader name={detailData.name} category={/*detailData.category*/ "<category>"} />
+            <AboutPanel content={detailData.description} />
             <PostLog id={id}/>
             <QandA/>
         </div>
     );
-
+    //todo: change to actual goal state
+    //todo: update when category implemented on be
 }

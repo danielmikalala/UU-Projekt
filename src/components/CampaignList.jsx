@@ -23,14 +23,13 @@ export default function CampaignList() {
             method: "GET",
             headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${token}`},
         });
-        return [[{name:"General"}, {name:"Education"}], await resCam.json()]; //Todo: return[await resCat.json(), await resCam.json()]
+        return [[], await resCam.json()]; //Todo: return[await resCat.json(), await resCam.json()]
     }
 
     useEffect(() => {
         fetchDashboardData().then(data => {
             setCategories(data[0]);
             setCampaigns(data[1]);
-            console.log(data);
         });
     }, []);
 
