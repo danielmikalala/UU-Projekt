@@ -5,27 +5,33 @@ import DetailPageHeader from "../components/detailPage/detailPageHeader.jsx";
 import AboutPanel from "../components/detailPage/AboutPanel.jsx";
 import QandA from "../components/detailPage/QandA.jsx";
 import {useAuth} from "../context/AuthContext.jsx";
-import ProgressBar from "../components/ProgressBar.jsx";
+import DonatePanel from "../components/detailPage/DonatePanel.jsx";
 
 export default function DetailPage() {
     const {token} = useAuth();
     const {id} = useParams();
     const fetchDetailData = async () => {
-        const res = await fetch(`/project/${id}`, {
+        console.log(id)
+        const res = await fetch(`/projects/${id}`, {
             method: "GET",
             headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${token}`},
         });
-
-        return res.body;
+        return await res.json();
     }
-    const [detailData, setDetailData] = React.useState(fetchDetailData());
+
+    const [detailData, setDetailData] = React.useState({});
     useEffect(() => {
-        setDetailData(fetchDetailData());
+        fetchDetailData().then(data => {
+            setDetailData(data);
+            console.log(data)
+        });
+
     }, [id]);
+    //todo: change to actual goal state
     return (
         <div className="min-h-screen py-10 space-y-8">
             <GoBackButton/>
-            <ProgressBar goal={detailData.goalAmount} status={0}></ProgressBar>
+            <DonatePanel goal={detailData.goalAmount} currentState={detailData.goalAmount / 2}/>
             <DetailPageHeader/>
             <AboutPanel/>
             <QandA/>
