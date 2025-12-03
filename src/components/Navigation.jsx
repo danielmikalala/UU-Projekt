@@ -19,7 +19,9 @@ export default function Navigation() {
     navigate("/auth", { replace: true });
   };
 
-  const handleCreateCampaign = () => {};
+  const handleCreateCampaign = () => {
+    navigate("/create");
+  };
 
   return (
     <nav className="top-0 left-0 right-0 w-full border-b border-gray-200 bg-white">
@@ -33,9 +35,9 @@ export default function Navigation() {
           <span className="text-sm text-gray-500 mr-1">
             {user?.name || user?.email || "User"}
           </span>
-          <Link to="/admin" className="no-underline">
+                    {user?.role.toLowerCase() === "admin" && <Link to="/admin" className="no-underline">
             <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
-          </Link>
+          </Link>}
           <Link to="/managed" className="no-underline">
             <PrimaryButton icon={<CollectionIcon />}>
               My Campaigns

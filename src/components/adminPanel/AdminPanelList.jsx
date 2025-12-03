@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
+import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
+import { useCampaigns } from "../../hooks/useCampaigns.js";
 
 const TABS = [
   { id: "campaigns", label: "Campaigns" },
@@ -23,6 +25,7 @@ export default function AdminPanelList() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const { campaigns } = useCampaigns();
 
   const isAddDisabled = useMemo(
     () => newCategoryName.trim().length === 0,
@@ -168,8 +171,38 @@ export default function AdminPanelList() {
       )}
 
       {activeTab === "campaigns" && (
-        <section className="mt-8 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
-          Campaign management is coming soon.
+        <section className="mt-8 space-y-6">
+          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Campaign Management
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Review and approve submitted campaigns. Campaigns with "PendingApproval" status can be approved or rejected.
+            </p>
+            
+            {campaigns.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
+                No campaigns submitted yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {campaigns.map((campaign) => (
+                  <ProjectApprovalPanel 
+                    key={campaign.id}
+                    project={{
+                      _id: campaign.id,
+                      title: campaign.title,
+                      description: campaign.description,
+                      category: campaign.category,
+                      fundingGoal: campaign.fundingGoal,
+                      status: campaign.status,
+                      createdAt: campaign.createdAt
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       )}
 

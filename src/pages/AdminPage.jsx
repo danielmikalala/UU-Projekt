@@ -20,9 +20,6 @@ export default function AdminPage() {
         <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
             {/* tvoje původní admin UI */}
             <AdminPanelPage />
-
-            {/* approval panel pro projekt */}
-            <ProjectApprovalPanel project={mockProject} />
         </div>
     );
 }
