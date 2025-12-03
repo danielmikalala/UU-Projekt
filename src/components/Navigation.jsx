@@ -19,7 +19,9 @@ export default function Navigation() {
     navigate("/auth", { replace: true });
   };
 
-  const handleCreateCampaign = () => {};
+  const handleCreateCampaign = () => {
+    navigate("/create");
+  };
 
   return (
     <nav className="top-0 left-0 right-0 w-full border-b border-gray-200 bg-white">

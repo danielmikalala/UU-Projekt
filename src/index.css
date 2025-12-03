@@ -38,3 +38,11 @@ body {
 .primary-button--light:hover {
   @apply bg-gray-50;
 }
+
+/* Campaign card styling */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
