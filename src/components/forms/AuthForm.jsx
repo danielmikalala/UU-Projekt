@@ -23,7 +23,6 @@ export default function AuthForm() {
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
-    console.log("LOGIN SUBMIT CLICKED", loginForm);
     setIsSubmitting(true);
     try {
       await login(loginForm);
@@ -37,7 +36,6 @@ export default function AuthForm() {
 
   const handleRegisterSubmit = async (event) => {
     event.preventDefault();
-    console.log("REGISTER SUBMIT CLICKED", registerForm);
     setIsSubmitting(true);
     try {
       await register(registerForm);
