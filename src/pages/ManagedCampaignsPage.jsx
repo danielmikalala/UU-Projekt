@@ -1,6 +1,7 @@
 import React from "react";
 import GoBackButton from "../components/buttons/GoBackButton.jsx";
 import PrimaryButton from "../components/buttons/PrimaryButton.jsx";
+import { Link } from "react-router-dom";
 
 export default function ManagedCampaignsPage() {
     return (
