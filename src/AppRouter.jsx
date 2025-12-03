@@ -9,6 +9,7 @@ import ManagedCampaignsPage from "./pages/ManagedCampaignsPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
