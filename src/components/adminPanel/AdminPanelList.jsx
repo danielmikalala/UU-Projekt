@@ -177,9 +177,10 @@ export default function AdminPanelList() {
               Campaign Management
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              Review and approve submitted campaigns. Campaigns with "PendingApproval" status can be approved or rejected.
+              Review and approve submitted campaigns. Campaigns with
+              "PendingApproval" status can be approved or rejected.
             </p>
-            
+
             {campaigns.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
                 No campaigns submitted yet.
@@ -187,7 +188,7 @@ export default function AdminPanelList() {
             ) : (
               <div className="space-y-4">
                 {campaigns.map((campaign) => (
-                  <ProjectApprovalPanel 
+                  <ProjectApprovalPanel
                     key={campaign.id}
                     project={{
                       _id: campaign.id,
@@ -196,7 +197,7 @@ export default function AdminPanelList() {
                       category: campaign.category,
                       fundingGoal: campaign.fundingGoal,
                       status: campaign.status,
-                      createdAt: campaign.createdAt
+                      createdAt: campaign.createdAt,
                     }}
                   />
                 ))}
