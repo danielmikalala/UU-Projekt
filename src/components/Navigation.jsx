@@ -35,9 +35,9 @@ export default function Navigation() {
           <span className="text-sm text-gray-500 mr-1">
             {user?.name || user?.email || "User"}
           </span>
-                    {user?.role.toLowerCase() === "admin" && <Link to="/admin" className="no-underline">
+          <Link to="/admin" className="no-underline">
             <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
-          </Link>}
+          </Link>
           <Link to="/managed" className="no-underline">
             <PrimaryButton icon={<CollectionIcon />}>
               My Campaigns
