@@ -6,13 +6,21 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("authToken");
     const savedUser = localStorage.getItem("authUser");
 
     if (savedToken) setToken(savedToken);
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem("authUser");
+      }
+    }
+    setLoading(false);
   }, []);
 
   const login = async ({ email, password }) => {
@@ -61,6 +69,7 @@ export function AuthProvider({ children }) {
     token,
     user,
     isAuthenticated: !!token,
+    loading,
     login,
     register,
     logout,

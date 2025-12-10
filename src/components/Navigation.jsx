@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import {
   GearIcon,
@@ -11,7 +11,9 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function Navigation() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  if (location.pathname.startsWith("/auth")) return null;
   if (!isAuthenticated) return null;
 
   const handleLogout = () => {
@@ -35,9 +37,11 @@ export default function Navigation() {
           <span className="text-sm text-gray-500 mr-1">
             {user?.name || user?.email || "User"}
           </span>
-                    {user?.role.toLowerCase() === "admin" && <Link to="/admin" className="no-underline">
-            <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
-          </Link>}
+          {user?.role.toLowerCase() === "admin" && (
+            <Link to="/admin" className="no-underline">
+              <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
+            </Link>
+          )}
           <Link to="/managed" className="no-underline">
             <PrimaryButton icon={<CollectionIcon />}>
               My Campaigns

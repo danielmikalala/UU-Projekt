@@ -17,7 +17,7 @@ export default function AppRouter() {
       <Navigation/>
       <div>
         <Routes>
-          <Route path="/" element={<Navigate to="/auth" replace/>}/>
+          <Route path="/" element={<Navigate to="/home" replace/>}/>
           <Route path="/auth" element={<AuthPage/>}/>
           <Route path="/home" element={<RequireAuth><HomePage/></RequireAuth>}/>
           <Route path="/admin" element={<RequireAuth><AdminPage/></RequireAuth>}/>

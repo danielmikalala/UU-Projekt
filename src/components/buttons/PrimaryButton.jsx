@@ -29,7 +29,7 @@ export default function PrimaryButton({
       className={`${variantClass} ${gapClass} ${sizeClass} ${className}`}
     >
       {hasIcon ? <span className="inline-flex">{icon}</span> : null}
-      {hasText ? <span>{children}</span> : null}
+      {hasText ? <span className="block w-full text-center">{children}</span> : null}
     </button>
   );
 }

@@ -14,9 +14,8 @@ export default function ManagedCampaignsPage() {
                 <p className="mb-6">In dev. Coming soon!</p>
 
                 {/* odkaz na edit stránky konkrétní kampaně */}
-                <a href="/campaign-admin/666">
-                    <PrimaryButton>Go to managed campaign</PrimaryButton>
-                </a>
+                 <Link to="/campaign-admin/666"><PrimaryButton>Go to managed campaign</PrimaryButton></Link>
+                
             </div>
         </>
     );

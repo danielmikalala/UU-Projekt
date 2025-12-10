@@ -30,4 +30,5 @@ export async function registerBasic({ name, email, password }) {
     body: JSON.stringify({ name, email, password }),
   });
   return handleResponse(resp);
+
 }
