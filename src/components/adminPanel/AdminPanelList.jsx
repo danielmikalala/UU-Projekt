@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
+import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
 import { useCampaigns } from "../../hooks/useCampaigns.js";
 
@@ -25,6 +26,8 @@ export default function AdminPanelList() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const { campaigns } = useCampaigns();
 
   const isAddDisabled = useMemo(
@@ -63,8 +66,24 @@ export default function AdminPanelList() {
     setNewCategoryName("");
   };
 
-  const handleDeleteCategory = (id) => {
-    setCategories((prev) => prev.filter((category) => category.id !== id));
+  const handleDeleteCategory = (category) => {
+    setCategoryToDelete(category);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      setCategories((prev) =>
+        prev.filter((category) => category.id !== categoryToDelete.id),
+      );
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setCategoryToDelete(null);
   };
 
   const handleEditCategory = (category) => {
@@ -157,7 +176,7 @@ export default function AdminPanelList() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteCategory(category.id)}
+                    onClick={() => handleDeleteCategory(category)}
                     aria-label={`Delete ${category.name}`}
                     className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
                   >
@@ -218,6 +237,13 @@ export default function AdminPanelList() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveCategory}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        itemName={categoryToDelete?.name || ""}
       />
     </>
   );
