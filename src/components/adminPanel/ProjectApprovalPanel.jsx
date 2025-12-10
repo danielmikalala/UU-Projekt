@@ -26,14 +26,14 @@ export default function ProjectApprovalPanel({
 
   const isPending = status === "PendingApproval";
 
-   if (!project && !projectId) {
-     return (
-       <p className="p-4 text-red-800">
-         Missing campaign data (neither <code>project</code> nor{" "}
-         <code>projectId</code> provided).
-       </p>
-     );
-   }
+  if (!project && !projectId) {
+    return (
+      <p className="p-4 text-red-800">
+        Missing campaign data (neither <code>project</code> nor{" "}
+        <code>projectId</code> provided).
+      </p>
+    );
+  }
 
   async function handleChangeStatus(newStatus) {
     const confirmText =
@@ -61,7 +61,7 @@ export default function ProjectApprovalPanel({
       setSuccess(
         newStatus === "Approved"
           ? "Campaign was approved successfully."
-          : "Campaign was rejected."
+          : "Campaign was rejected.",
       );
       setWorking(false);
       return;
@@ -81,7 +81,7 @@ export default function ProjectApprovalPanel({
       setSuccess(
         newStatus === "Approved"
           ? "Campaign was approved successfully."
-          : "Campaign was rejected."
+          : "Campaign was rejected.",
       );
     } catch (e) {
       setError(e?.message || "Error changing campaign status.");
@@ -90,75 +90,79 @@ export default function ProjectApprovalPanel({
     }
   }
 
-   return (
-     <div className="max-w-3xl mx-auto my-4 p-4 rounded-xl border border-gray-200 bg-gray-50 flex justify-between items-start">
-       <div className="flex-1 mr-4">
-         <div className="mb-3">
-           <h3 className="text-lg font-semibold text-gray-900 m-0 mb-1">
-             {project?.title || "Campaign"}
-           </h3>
-           <span className={`px-2 py-1 rounded text-xs font-medium ${
-             status === "PendingApproval"
-               ? "bg-yellow-100 text-yellow-800"
-               : status === "Approved"
-               ? "bg-green-100 text-green-800"
-               : "bg-red-100 text-red-800"
-           }`}>
-             {status === "PendingApproval" ? "Pending" : status}
-           </span>
-         </div>
+  return (
+    <div className="max-w-3xl mx-auto my-4 p-4 rounded-xl border border-gray-200 bg-gray-50 flex justify-between items-start">
+      <div className="flex-1 mr-4">
+        <div className="mb-3">
+          <h3 className="text-lg font-semibold text-gray-900 m-0 mb-1">
+            {project?.title || "Campaign"}
+          </h3>
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              status === "PendingApproval"
+                ? "bg-yellow-100 text-yellow-800"
+                : status === "Approved"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+            }`}
+          >
+            {status === "PendingApproval" ? "Pending" : status}
+          </span>
+        </div>
 
-         {project?.description && (
-           <p className="text-sm text-gray-700 leading-relaxed m-0">
-             {project.description}
-           </p>
-         )}
-       </div>
+        {project?.description && (
+          <p className="text-sm text-gray-700 leading-relaxed m-0">
+            {project.description}
+          </p>
+        )}
+      </div>
 
-       <div className="flex flex-col gap-2 flex-shrink-0 items-end">
-         {success ? (
-           <div className={`p-2 rounded text-xs whitespace-nowrap ${
-             status === "Rejected" 
-               ? "bg-red-100 text-red-800 border border-red-200" 
-               : "bg-green-100 text-green-800 border border-green-200"
-           }`}>
-             {success}
-           </div>
-         ) : error ? (
-           <div className="p-2 rounded bg-red-100 text-red-800 border border-red-200 text-xs whitespace-nowrap">
-             {error}
-           </div>
-         ) : (
-           <>
-             <button
-               type="button"
-               disabled={!isPending || working}
-               onClick={() => handleChangeStatus("Approved")}
-               className={`px-3 py-1.5 rounded text-xs font-semibold text-white ${
-                 !isPending || working 
-                   ? "bg-gray-400 cursor-default" 
-                   : "bg-purple-600 hover:bg-purple-700 cursor-pointer"
-               }`}
-             >
-               Approve
-             </button>
-             {isPending && (
-               <button
-                 type="button"
-                 disabled={working}
-                 onClick={() => handleChangeStatus("Rejected")}
-                 className={`px-3 py-1.5 rounded text-xs font-semibold text-white ${
-                   working 
-                     ? "bg-gray-400 cursor-default" 
-                     : "bg-red-600 hover:bg-red-700 cursor-pointer"
-                 }`}
-               >
-                 Reject
-               </button>
-             )}
-           </>
-         )}
-       </div>
+      <div className="flex flex-col gap-2 flex-shrink-0 items-end">
+        {success ? (
+          <div
+            className={`p-2 rounded text-xs whitespace-nowrap ${
+              status === "Rejected"
+                ? "bg-red-100 text-red-800 border border-red-200"
+                : "bg-green-100 text-green-800 border border-green-200"
+            }`}
+          >
+            {success}
+          </div>
+        ) : error ? (
+          <div className="p-2 rounded bg-red-100 text-red-800 border border-red-200 text-xs whitespace-nowrap">
+            {error}
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              disabled={!isPending || working}
+              onClick={() => handleChangeStatus("Approved")}
+              className={`px-3 py-1.5 rounded text-xs font-semibold text-white ${
+                !isPending || working
+                  ? "bg-gray-400 cursor-default"
+                  : "bg-purple-600 hover:bg-purple-700 cursor-pointer"
+              }`}
+            >
+              Approve
+            </button>
+            {isPending && (
+              <button
+                type="button"
+                disabled={working}
+                onClick={() => handleChangeStatus("Rejected")}
+                className={`px-3 py-1.5 rounded text-xs font-semibold text-white ${
+                  working
+                    ? "bg-gray-400 cursor-default"
+                    : "bg-red-600 hover:bg-red-700 cursor-pointer"
+                }`}
+              >
+                Reject
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

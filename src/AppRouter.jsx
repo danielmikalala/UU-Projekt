@@ -1,5 +1,5 @@
 import React from "react";
-import {BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navigation from "./components/Navigation.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
@@ -10,11 +10,10 @@ import CreateCampaignPage from "./pages/CreateCampaignPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 
-
 export default function AppRouter() {
   return (
     <BrowserRouter>
-      <Navigation/>
+      <Navigation />
       <div>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace/>}/>

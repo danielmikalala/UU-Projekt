@@ -6,7 +6,11 @@ import { useAuth } from "../../context/AuthContext.jsx";
 export default function AuthForm() {
   const [mode, setMode] = useState("login");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" });
+  const [registerForm, setRegisterForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState("");
 
@@ -53,7 +57,9 @@ export default function AuthForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900 text-center">CrowdFund</h1>
+        <h1 className="text-2xl font-bold text-gray-900 text-center">
+          CrowdFund
+        </h1>
         <p className="mt-1 text-sm text-gray-500 text-center">
           Login or create an account to get started
         </p>
@@ -63,7 +69,9 @@ export default function AuthForm() {
             type="button"
             onClick={() => setMode("login")}
             className={`flex-1 rounded-md px-3 py-2 transition-colors ${
-              isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              isLogin
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Login
@@ -93,7 +101,9 @@ export default function AuthForm() {
             </div>
 
             <div className="space-y-1 text-left">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
               <input
                 type="password"
                 required
@@ -142,7 +152,9 @@ export default function AuthForm() {
             </div>
 
             <div className="space-y-1 text-left">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
               <input
                 type="password"
                 required

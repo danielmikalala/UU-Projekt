@@ -11,29 +11,35 @@ export function CampaignProvider({ children }) {
       ...campaignData,
       status: "PendingApproval",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
-    
-    setCampaigns(prev => [...prev, newCampaign]);
+
+    setCampaigns((prev) => [...prev, newCampaign]);
     return newCampaign;
   };
 
   const updateCampaignStatus = (campaignId, newStatus) => {
-    setCampaigns(prev => 
-      prev.map(campaign => 
-        campaign.id === campaignId 
-          ? { ...campaign, status: newStatus, updatedAt: new Date().toISOString() }
-          : campaign
-      )
+    setCampaigns((prev) =>
+      prev.map((campaign) =>
+        campaign.id === campaignId
+          ? {
+              ...campaign,
+              status: newStatus,
+              updatedAt: new Date().toISOString(),
+            }
+          : campaign,
+      ),
     );
   };
 
   const getCampaignById = (campaignId) => {
-    return campaigns.find(campaign => campaign.id === campaignId);
+    return campaigns.find((campaign) => campaign.id === campaignId);
   };
 
   const getPendingCampaigns = () => {
-    return campaigns.filter(campaign => campaign.status === "PendingApproval");
+    return campaigns.filter(
+      (campaign) => campaign.status === "PendingApproval",
+    );
   };
 
   const value = {
@@ -41,7 +47,7 @@ export function CampaignProvider({ children }) {
     addCampaign,
     updateCampaignStatus,
     getCampaignById,
-    getPendingCampaigns
+    getPendingCampaigns,
   };
 
   return (
@@ -53,4 +59,3 @@ export function CampaignProvider({ children }) {
 
 // Export context for use in hooks
 export { CampaignContext };
-
