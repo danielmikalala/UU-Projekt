@@ -21,6 +21,7 @@ export default function CampaignList() {
             headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${token}`},
         });
         */
+
     const res = await api(`/projects`, {
       method: "GET",
     });
