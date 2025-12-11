@@ -23,10 +23,6 @@ export default function CampaignList() {
         */
     const res = await api(`/projects`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
     });
     console.log("Fetched campaigns:", res);
     return [[], await res.json()];
