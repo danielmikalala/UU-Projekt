@@ -6,6 +6,19 @@ import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
 import { useCampaigns } from "../../hooks/useCampaigns.js";
 
+const fetchAdminPanelData = async () => {
+  if (fetchedRef.current) return [categories, campaigns, users];
+  fetchedRef.current = true;
+
+  const resCat = await api("/categories", { method: "GET" });
+  const resCam = await api("/projects", { method: "GET" });
+  const resUsers = await api("/users", { method: "GET" });
+
+  console.log("Fetched categories and campaigns:", resCat, resCam, resUsers);
+
+  return [await resCat, await resCam, await resUsers];
+};
+
 const TABS = [
   { id: "campaigns", label: "Campaigns" },
   { id: "categories", label: "Categories" },
@@ -22,7 +35,7 @@ const INITIAL_CATEGORIES = [
 
 export default function AdminPanelList() {
   const [activeTab, setActiveTab] = useState("categories");
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -32,7 +45,7 @@ export default function AdminPanelList() {
 
   const isAddDisabled = useMemo(
     () => newCategoryName.trim().length === 0,
-    [newCategoryName],
+    [newCategoryName]
   );
 
   const handleAddCategory = (event) => {
@@ -74,7 +87,7 @@ export default function AdminPanelList() {
   const handleConfirmDelete = () => {
     if (categoryToDelete) {
       setCategories((prev) =>
-        prev.filter((category) => category.id !== categoryToDelete.id),
+        prev.filter((category) => category.id !== categoryToDelete.id)
       );
       setIsDeleteModalOpen(false);
       setCategoryToDelete(null);
@@ -99,8 +112,8 @@ export default function AdminPanelList() {
   const handleSaveCategory = (updatedCategory) => {
     setCategories((prev) =>
       prev.map((category) =>
-        category.id === updatedCategory.id ? updatedCategory : category,
-      ),
+        category.id === updatedCategory.id ? updatedCategory : category
+      )
     );
   };
 

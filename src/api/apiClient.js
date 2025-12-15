@@ -17,7 +17,11 @@ export function useApi() {
       credentials: "include",
     });
 
-    if (!response.ok) return console.error(`API error: ${response.status}`);
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(`API ${response.status}: ${message}`);
+    }
+
     return response.json();
   };
 }

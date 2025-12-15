@@ -15,26 +15,26 @@ export default function CampaignList() {
     if (fetchedRef.current) return [categories, campaigns];
     fetchedRef.current = true;
 
+    const resCat = await api("/categories", { method: "GET" });
+    const resCam = await api("/projects", { method: "GET" });
+
+    console.log("Fetched categories and campaigns:", resCat, resCam);
+
+    return [await resCat, await resCam];
+
     /*
         const resCat = await fetch(`/categories`, {  //todo: use later - categories not implemented yet on BE
             method: "GET",
             headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${token}`},
         });
-        */
-
-    const res = await api(`/projects`, {
-      method: "GET",
-    });
-    console.log("Fetched campaigns:", res);
-    return [[], await res.json()];
-    /* const resCam = await fetch(`/projects`, {
+         const resCam = await fetch(`/projects`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
-    return [[], await resCam.json()]; //Todo: return[await resCat.json(), await resCam.json()]
+    return [await resCat.json(), await resCam.json()]; //Todo: return[await resCat.json(), await resCam.json()]
   */
   };
 
