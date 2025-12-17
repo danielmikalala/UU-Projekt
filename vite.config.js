@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+// ZCHECNOUT JESTLI NENI NOVA URL PRED POUZITIM U SIMONA const hostUrl = "https://convicted-consumer-product-accordingly.trycloudflare.com"
 
 const hostUrl = "http://localhost:"
 export default defineConfig({
