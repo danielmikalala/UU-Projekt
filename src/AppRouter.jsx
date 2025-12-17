@@ -16,15 +16,57 @@ export default function AppRouter() {
       <Navigation />
       <div>
         <Routes>
-          <Route path="/" element={<Navigate to="/home" replace/>}/>
-          <Route path="/auth" element={<AuthPage/>}/>
-          <Route path="/home" element={<RequireAuth><HomePage/></RequireAuth>}/>
-          <Route path="/admin" element={<RequireAuth><AdminPage/></RequireAuth>}/>
-          <Route path="/managed" element={<RequireAuth><ManagedCampaignsPage/></RequireAuth>}/>
-          <Route path="/create" element={<RequireAuth><CreateCampaignPage/></RequireAuth>}/>
-          <Route path="/campaign-admin/:id" element={<RequireAuth><CampaignAdminPanelPage/></RequireAuth>}/>
-          <Route path="/detail/:id" element={<RequireAuth><DetailPage/></RequireAuth>}/>
-          <Route path="*" element={<Navigate to="/auth" replace/>}/>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route
+            path="/home"
+            element={
+              <RequireAuth>
+                <HomePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <AdminPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/managed"
+            element={
+              <RequireAuth>
+                <ManagedCampaignsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <RequireAuth>
+                <CreateCampaignPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/campaign-admin/:id"
+            element={
+              <RequireAuth>
+                <CampaignAdminPanelPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/detail/:id"
+            element={
+              <RequireAuth>
+                <DetailPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </div>
     </BrowserRouter>

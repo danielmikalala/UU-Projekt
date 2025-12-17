@@ -80,7 +80,9 @@ export default function AuthForm() {
             type="button"
             onClick={() => setMode("register")}
             className={`flex-1 rounded-md px-3 py-2 transition-colors ${
-              !isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              !isLogin
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Register
@@ -159,7 +161,9 @@ export default function AuthForm() {
                 type="password"
                 required
                 value={registerForm.password}
-                onChange={(e) => handleRegisterChange("password", e.target.value)}
+                onChange={(e) =>
+                  handleRegisterChange("password", e.target.value)
+                }
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
               />
             </div>

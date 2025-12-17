@@ -28,18 +28,56 @@ export function useApi() {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    const body = options.body
+      ? typeof options.body === "string"
+        ? options.body
+        : JSON.stringify(options.body)
+      : undefined;
+
     const response = await fetch(url, {
       ...options,
+      body,
       headers,
       credentials: "include",
     });
 
     if (!response.ok) {
-      const message = await response.text();
-      throw new Error(`API ${response.status}: ${message}`);
+      let errorMessage = `API ${response.status}: `;
+      try {
+        const contentType = response.headers.get("content-type");
+        const text = await response.text();
+        if (contentType && contentType.includes("application/json") && text) {
+          const errorData = JSON.parse(text);
+          errorMessage +=
+            errorData.error || errorData.message || JSON.stringify(errorData);
+        } else {
+          errorMessage += text || "Unknown error";
+        }
+      } catch {
+        errorMessage += "Failed to parse error response";
+      }
+      throw new Error(errorMessage);
     }
 
-    return response.json();
+    const contentType = response.headers.get("content-type");
+    const text = await response.text();
+
+    if (!text || text.trim() === "") {
+      return null;
+    }
+
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
   };
 }
-

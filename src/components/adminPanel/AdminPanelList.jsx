@@ -1,23 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
 import { useCampaigns } from "../../hooks/useCampaigns.js";
-
-const fetchAdminPanelData = async () => {
-  if (fetchedRef.current) return [categories, campaigns, users];
-  fetchedRef.current = true;
-
-  const resCat = await api("/categories", { method: "GET" });
-  const resCam = await api("/projects", { method: "GET" });
-  const resUsers = await api("/users", { method: "GET" });
-
-  console.log("Fetched categories and campaigns:", resCat, resCam, resUsers);
-
-  return [await resCat, await resCam, await resUsers];
-};
+import { useApi } from "../../api/apiClient.js";
 
 const TABS = [
   { id: "campaigns", label: "Campaigns" },
@@ -26,6 +14,7 @@ const TABS = [
 ];
 
 export default function AdminPanelList() {
+  const api = useApi();
   const [activeTab, setActiveTab] = useState("categories");
   const [categories, setCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -33,14 +22,34 @@ export default function AdminPanelList() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [error, setError] = useState("");
   const { campaigns } = useCampaigns();
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        const categoriesData = await api("/categories", { method: "GET" });
+        setCategories(categoriesData || []);
+        setError("");
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError("Failed to load categories");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const isAddDisabled = useMemo(
-    () => newCategoryName.trim().length === 0,
-    [newCategoryName]
+    () => newCategoryName.trim().length === 0 || isAdding,
+    [newCategoryName, isAdding],
   );
 
-  const handleAddCategory = (event) => {
+  const handleAddCategory = async (event) => {
     event.preventDefault();
     const trimmedName = newCategoryName.trim();
 
@@ -49,22 +58,35 @@ export default function AdminPanelList() {
     }
 
     const alreadyExists = categories.some(
-      (category) => (category.name || "").toLowerCase() === trimmedName.toLowerCase()
+      (category) =>
+        (category.name || "").toLowerCase() === trimmedName.toLowerCase(),
     );
 
     if (alreadyExists) {
+      setError("Category with this name already exists");
       setNewCategoryName("");
       return;
     }
 
-    setCategories((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: trimmedName,
-      },
-    ]);
-    setNewCategoryName("");
+    try {
+      setIsAdding(true);
+      setError("");
+      await api("/categories", {
+        method: "POST",
+        body: {
+          name: trimmedName,
+        },
+      });
+
+      const updatedCategories = await api("/categories", { method: "GET" });
+      setCategories(updatedCategories || []);
+      setNewCategoryName("");
+    } catch (err) {
+      console.error("Error creating category:", err);
+      setError(err.message || "Failed to create category");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleDeleteCategory = (category) => {
@@ -72,13 +94,35 @@ export default function AdminPanelList() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (categoryToDelete) {
-      setCategories((prev) =>
-        prev.filter((category) => category.id !== categoryToDelete.id)
-      );
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return;
+
+    const categoryId = categoryToDelete._id || categoryToDelete.id;
+    if (!categoryId) {
+      setError("Category ID not found");
       setIsDeleteModalOpen(false);
       setCategoryToDelete(null);
+      return;
+    }
+
+    try {
+      setIsAdding(true);
+      setError("");
+      await api(`/categories/${categoryId}`, {
+        method: "DELETE",
+      });
+
+      const updatedCategories = await api("/categories", { method: "GET" });
+      setCategories(updatedCategories || []);
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      setError(err.message || "Failed to delete category");
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -100,8 +144,10 @@ export default function AdminPanelList() {
   const handleSaveCategory = (updatedCategory) => {
     setCategories((prev) =>
       prev.map((category) =>
-        category.id === updatedCategory.id ? updatedCategory : category
-      )
+        (category._id || category.id) === (updatedCategory._id || updatedCategory.id)
+          ? updatedCategory
+          : category,
+      ),
     );
   };
 
@@ -114,7 +160,10 @@ export default function AdminPanelList() {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setError("");
+              }}
               className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
                 isActive
                   ? "bg-gray-900 text-white shadow-sm"
@@ -147,19 +196,31 @@ export default function AdminPanelList() {
               <PrimaryButton
                 type={isAddDisabled ? "button" : "submit"}
                 icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+                disabled={isAddDisabled}
                 className={`${isAddDisabled ? "pointer-events-none opacity-60" : ""} !bg-purple-600 !border-purple-600 hover:!bg-purple-700`}
               >
-                Add
+                {isAdding ? "Adding..." : "Add"}
               </PrimaryButton>
             </form>
           </div>
 
+          {error && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 mb-4">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-4">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
-              >
+            {isLoading ? (
+              <div className="text-center text-gray-500 py-4">Loading categories...</div>
+            ) : categories.length === 0 ? (
+              <div className="text-center text-gray-500 py-4">No categories yet. Create one above!</div>
+            ) : (
+              categories.map((category) => (
+                <div
+                  key={category._id || category.id}
+                  className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
+                >
                 <div>
                   <p className="text-base font-semibold text-gray-900">
                     {category.name}
@@ -184,7 +245,8 @@ export default function AdminPanelList() {
                   </button>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </section>
       )}

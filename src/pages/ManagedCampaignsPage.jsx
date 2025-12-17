@@ -11,10 +11,11 @@ export default function ManagedCampaignsPage() {
         <h3 className="text-2xl font-semibold mr-6">Managed Campaigns</h3>
         <p className="mb-6">In dev. Coming soon!</p>
 
-                {/* odkaz na edit stránky konkrétní kampaně */}
-                 <Link to="/campaign-admin/666"><PrimaryButton>Go to managed campaign</PrimaryButton></Link>
-                
-            </div>
-        </>
-    );
+        {/* odkaz na edit stránky konkrétní kampaně */}
+        <Link to="/campaign-admin/666">
+          <PrimaryButton>Go to managed campaign</PrimaryButton>
+        </Link>
+      </div>
+    </>
+  );
 }
