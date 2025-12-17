@@ -3,36 +3,23 @@ import { X } from "lucide-react";
 
 export default function AdminPanelModal({ category, isOpen, onClose, onSave }) {
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
 
   useEffect(() => {
     if (category) {
       setName(category.name || "");
-      setSlug(category.slug || "");
     }
   }, [category]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    if (name.trim() && slug.trim()) {
+    if (name.trim()) {
       onSave({
         ...category,
         name: name.trim(),
-        slug: slug.trim(),
       });
       onClose();
     }
-  };
-
-  const handleNameChange = (value) => {
-    setName(value);
-    // Auto-generate slug from name
-    const generatedSlug = value
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-");
-    setSlug(generatedSlug);
   };
 
   return (
@@ -60,25 +47,8 @@ export default function AdminPanelModal({ category, isOpen, onClose, onSave }) {
               id="category-name"
               type="text"
               value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Category name"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="category-slug"
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
-              Slug
-            </label>
-            <input
-              id="category-slug"
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="category-slug"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
             />
           </div>
@@ -95,9 +65,9 @@ export default function AdminPanelModal({ category, isOpen, onClose, onSave }) {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!name.trim() || !slug.trim()}
+            disabled={!name.trim()}
             className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors ${
-              !name.trim() || !slug.trim()
+              !name.trim()
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-purple-600 hover:bg-purple-700"
             }`}

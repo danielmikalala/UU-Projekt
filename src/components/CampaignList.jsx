@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import FundingCard from "./cards/CampaignCard.jsx";
 import { useAuth } from "../context/AuthContext.jsx";

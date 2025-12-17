@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useMemo, useState } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
@@ -5,19 +6,7 @@ import AdminPanelModal from "./AdminPanelModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
 import { useCampaigns } from "../../hooks/useCampaigns.js";
-
-const fetchAdminPanelData = async () => {
-  if (fetchedRef.current) return [categories, campaigns, users];
-  fetchedRef.current = true;
-
-  const resCat = await api("/categories", { method: "GET" });
-  const resCam = await api("/projects", { method: "GET" });
-  const resUsers = await api("/users", { method: "GET" });
-
-  console.log("Fetched categories and campaigns:", resCat, resCam, resUsers);
-
-  return [await resCat, await resCam, await resUsers];
-};
+import { useApi } from "../../api/apiClient.js";
 
 const TABS = [
   { id: "campaigns", label: "Campaigns" },
@@ -25,60 +14,64 @@ const TABS = [
   { id: "users", label: "Users" },
 ];
 
-const INITIAL_CATEGORIES = [
-  { id: 1, name: "Technology", slug: "Innovate with technology" },
-  { id: 2, name: "Health", slug: "Support healthcare initiatives" },
-  { id: 3, name: "Education", slug: "Expand access to education" },
-  { id: 4, name: "Community", slug: "Build stronger communities" },
-  { id: 5, name: "Environment", slug: "Protect our environment" },
-];
-
 export default function AdminPanelList() {
   const [activeTab, setActiveTab] = useState("categories");
   const [categories, setCategories] = useState([]);
+  const [users, setUsers] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const { campaigns } = useCampaigns();
+  const fetchedRef = React.useRef(false);
+  const api = useApi();
+
+  const fetchAdminPanelData = async () => {
+    if (fetchedRef.current) return [categories, campaigns, users];
+    fetchedRef.current = true;
+
+    const resCat = await api("/categories", { method: "GET" });
+    const resCam = await api("/projects", { method: "GET" });
+    const resUsers = await api("/users", { method: "GET" });
+
+    console.log("Fetched categories and campaigns:", resCat, resCam, resUsers);
+
+    return [await resCat, await resCam, await resUsers];
+  };
 
   const isAddDisabled = useMemo(
     () => newCategoryName.trim().length === 0,
     [newCategoryName]
   );
 
-  const handleAddCategory = (event) => {
-    event.preventDefault();
-    const trimmedName = newCategoryName.trim();
+ 
 
-    if (!trimmedName) {
-      return;
-    }
+const handleAddCategory = async (event) => {
+  event.preventDefault();
 
-    const slug = trimmedName
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-");
+  const trimmedName = newCategoryName.trim();
+  if (!trimmedName) return;
 
-    const alreadyExists = categories.some((category) => category.slug === slug);
+  try {
+    const token = localStorage.getItem("authToken");
 
-    if (alreadyExists) {
-      setNewCategoryName("");
-      return;
-    }
-
-    setCategories((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: trimmedName,
-        slug,
+    const createdCategory = await api("/categories", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    ]);
-    setNewCategoryName("");
-  };
+      body: JSON.stringify({
+        name: trimmedName,
+      }),
+    });
 
+    setCategories((prev) => [...prev, createdCategory]);
+    setNewCategoryName("");
+  } catch (error) {
+    console.error("Failed to create category", error);
+  }
+};
   const handleDeleteCategory = (category) => {
     setCategoryToDelete(category);
     setIsDeleteModalOpen(true);

@@ -21,6 +21,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       "/categories": {
+        
         target: hostUrl,
         changeOrigin: true,
       }
