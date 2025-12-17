@@ -51,6 +51,7 @@ export default function AdminPanelList() {
 
     setAddError("");
 
+<<<<<<< HEAD
     const exists = categories.some(
       (c) => c?.name?.toLowerCase() === trimmedName.toLowerCase()
     );
@@ -77,6 +78,22 @@ export default function AdminPanelList() {
     }
   };
 
+=======
+  try {
+    const createdCategory = await api("/categories", {
+      method: "POST",
+      body: JSON.stringify({
+        name: trimmedName,
+      }),
+    });
+
+    //refetch update
+    setNewCategoryName("");
+  } catch (error) {
+    console.error("Failed to create category", error);
+  }
+};
+>>>>>>> 9d1a2c9e924ed9adb1e1bf152b1f7b932a0c8f8b
   const handleDeleteCategory = (category) => {
     setCategoryToDelete(category);
     setIsDeleteModalOpen(true);

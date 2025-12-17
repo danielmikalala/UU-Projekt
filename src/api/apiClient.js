@@ -39,8 +39,12 @@ export function useApi() {
       throw new Error(`API ${response.status}: ${message}`);
     }
 
+<<<<<<< HEAD
     const text = await response.text();
 return text ? JSON.parse(text) : null;
+=======
+    return response.body;
+>>>>>>> 9d1a2c9e924ed9adb1e1bf152b1f7b932a0c8f8b
   };
 }
 
