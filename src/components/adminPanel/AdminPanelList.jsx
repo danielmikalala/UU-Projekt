@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Shield } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
@@ -25,6 +25,8 @@ export default function AdminPanelList() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState("");
+  const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const { campaigns } = useCampaigns();
 
   useEffect(() => {
@@ -43,6 +45,24 @@ export default function AdminPanelList() {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (activeTab !== "users") return;
+      
+      try {
+        setIsLoadingUsers(true);
+        const usersData = await api("/users", { method: "GET" });
+        setUsers(usersData || []);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError("Failed to load users");
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, [activeTab]);
 
   const isAddDisabled = useMemo(
     () => newCategoryName.trim().length === 0 || isAdding,
@@ -289,8 +309,81 @@ export default function AdminPanelList() {
       )}
 
       {activeTab === "users" && (
-        <section className="mt-8 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
-          User management is coming soon.
+        <section className="mt-8 space-y-4">
+          {isLoadingUsers ? (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
+              Loading users...
+            </div>
+          ) : users.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
+              No users found.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {users.map((user) => {
+                const isAdmin = user.role === "Admin" || user.role === "admin";
+                return (
+                  <div
+                    key={user._id || user.id}
+                    className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
+                  >
+                    <div className="flex-1">
+                      <p className="text-base font-semibold text-gray-900">
+                        {user.name || user.email?.split("@")[0] || "User"}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Shield
+                          className={`h-4 w-4 ${
+                            isAdmin ? "text-purple-600" : "text-gray-400"
+                          }`}
+                          strokeWidth={2}
+                        />
+                        <span
+                          className={`text-sm font-medium ${
+                            isAdmin ? "text-purple-600" : "text-gray-600"
+                          }`}
+                        >
+                          {isAdmin ? "Admin" : "User"}
+                        </span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isAdmin}
+                          onChange={async (e) => {
+                            const newRole = e.target.checked ? "Admin" : "User";
+                            try {
+                              setIsAdding(true);
+                              await api(`/users/${user._id || user.id}`, {
+                                method: "PATCH",
+                                body: { role: newRole },
+                              });
+                              const updatedUsers = await api("/users", {
+                                method: "GET",
+                              });
+                              setUsers(updatedUsers || []);
+                            } catch (err) {
+                              console.error("Error updating user role:", err);
+                              setError(
+                                err.message || "Failed to update user role"
+                              );
+                            } finally {
+                              setIsAdding(false);
+                            }
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 
