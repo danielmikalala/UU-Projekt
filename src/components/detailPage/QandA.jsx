@@ -1,12 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApi } from "../../api/apiClient.js";
+import Question from "./Question.jsx";
 
 export default function QandA({ id }) {
   const api = useApi();
+  const fetchedRef = React.useRef(false);
+  const [campaignData, setCampaignData] = useState([]);
 
-  const [campaignData, setCampaignData] = useState({
-    content: "",
-  });
+  const fetchQandAData = async () => {
+    if (fetchedRef.current) return campaignData;
+    fetchedRef.current = true;
+    const res = await api(`/projects/${id}/comments`, {
+      method: "GET",
+    });
+    return await res;
+  };
+  useEffect(() => {
+    fetchQandAData().then((data) => {
+      setCampaignData(data);
+    });
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +33,6 @@ export default function QandA({ id }) {
       console.log("Backend response:", result);
 
       setCampaignData({ content: "" });
-
     } catch (error) {
       console.error("Error submitting question:", error);
       throw error;
@@ -39,9 +51,7 @@ export default function QandA({ id }) {
             placeholder="Ask a question..."
             className="w-full border rounded-lg p-3 h-20 focus:outline-none focus:ring focus:ring-purple-300"
             value={campaignData.content}
-            onChange={(e) =>
-              setCampaignData({ content: e.target.value })
-            }
+            onChange={(e) => setCampaignData({ content: e.target.value })}
           />
         </div>
 
@@ -54,11 +64,14 @@ export default function QandA({ id }) {
       </form>
 
       <div className="mt-6 border-t pt-4">
-        <div className="mb-4">
-          <p className="font-semibold">Eva</p>
-          <p className="text-sm text-gray-500">22/10/2025</p>
-          <p className="mt-1">A proc ne redbull?</p>
-        </div>
+        {campaignData.map((question, index) => (
+          <Question
+            key={index}
+            content={question.content}
+            author={question.author}
+            date={question.date}
+          />
+        ))}
       </div>
     </div>
   );
