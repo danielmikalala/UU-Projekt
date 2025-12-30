@@ -1,53 +1,69 @@
 import React, { useState, useEffect } from "react";
 import { useApi } from "../../api/apiClient.js";
 import Question from "./Question.jsx";
+import Answer from "./Answer.jsx";
+
+const MAX_QUESTION_LENGTH = 500;
 
 export default function QandA({ id }) {
   const api = useApi();
-  const fetchedRef = React.useRef(false);
-  const [campaignData, setCampaignData] = useState([]);
+  const [items, setItems] = useState([]);
   const [comment, setComment] = useState("");
 
-  const fetchQandAData = async () => {
-    if (fetchedRef.current) return campaignData;
-    fetchedRef.current = true;
-    const res = await api(`/projects/${id}/comments`, {
-      method: "GET",
+  const fetchAndBuild = async () => {
+    const res = await api(`/projects/${id}/comments`, { method: "GET" });
+    const payload = Array.isArray(res) ? res : res?.payload ?? [];
+    const list = (Array.isArray(payload) ? payload : []).filter(Boolean);
+
+    const map = Object.create(null);
+    list.forEach((it) => {
+      const key = String(it._id ?? it.id ?? "");
+      if (!key) return;
+      map[key] = { ...it, answers: [] };
     });
-    console.log(res);
-    return await res;
+    list.forEach((it) => {
+      const pid = it.parentCommentId;
+      if (pid && map[String(pid)]) map[String(pid)].answers.push(it);
+    });
+    const roots = Object.values(map).filter(
+      (it) => !it.parentCommentId || !map[String(it.parentCommentId)]
+    );
+    setItems(roots);
   };
-    useEffect(() => {
-      fetchQandAData().then((data) => {
-        setCampaignData(Array.isArray(data) ? data.filter(Boolean) : []);
-      });
-    }, []);
+
+  useEffect(() => {
+    if (id) fetchAndBuild();
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    const text = comment.trim();
+    if (!text) return;
     try {
-      const result = await api(`/projects/${id}/comments`, {
+      const res = await api(`/projects/${id}/comments`, {
         method: "POST",
-        body: { content: comment.trim() },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text }),
       });
-      const created = result?.payload ?? result ?? null;
-      console.log(created);
+      const created = res?.payload ?? res ?? null;
       setComment("");
-
-      if (created) {
-        setCampaignData((prev) =>
-          Array.isArray(prev) ? [...prev, created] : [created]
+      if (!created) {
+        await fetchAndBuild();
+        return;
+      }
+      if (created.parentCommentId) {
+        setItems((prev) =>
+          prev.map((q) =>
+            String(q._id ?? q.id) === String(created.parentCommentId)
+              ? { ...q, answers: [...(q.answers || []), created] }
+              : q
+          )
         );
       } else {
-        fetchedRef.current = false;
-        const refreshed = await fetchQandAData();
-        setCampaignData(Array.isArray(refreshed) ? refreshed : []);
+        setItems((prev) => [...prev, { ...created, answers: [] }]);
       }
-
-      console.log("Backend response (normalized):", created);
-    } catch (error) {
-      console.error("Error submitting question:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -56,30 +72,50 @@ export default function QandA({ id }) {
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <span>💬</span> Questions & Answers
       </h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <textarea
-            placeholder="Ask a question..."
-            className="w-full border rounded-lg p-3 h-20 focus:outline-none focus:ring focus:ring-purple-300"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
+
+      <form onSubmit={handleSubmit} className="mb-6">
+        <textarea
+          placeholder="Ask a question..."
+          className="w-full border rounded-lg p-3 h-20"
+          value={comment}
+          onChange={(e) => setComment(e.target.value.slice(0, MAX_QUESTION_LENGTH))}
+          maxLength={MAX_QUESTION_LENGTH}
+        />
+        <div className="flex items-center justify-between mt-2">
+          <small className="text-sm text-gray-500">
+            {comment.length}/{MAX_QUESTION_LENGTH}
+          </small>
+          <button
+            type="submit"
+            disabled={!comment.trim()}
+            className="bg-purple-600 text-white px-5 py-2 rounded-lg disabled:opacity-50"
+          >
+            Post Question
+          </button>
         </div>
-        <button
-          type="submit"
-          className="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition"
-        >
-          Post Question
-        </button>
       </form>
+
       <div className="mt-6 border-t pt-4">
-        {campaignData.filter(Boolean).map((question, index) => (
-          <Question
-            key={index}
-            content={question.content}
-            author={question.author?.email ?? "anonymous"}
-            date={question.creationDate}
-          />
+        {items.map((q, i) => (
+          <div key={q._id ?? q.id ?? i} className="mb-6">
+            <Question
+              content={q.content}
+              author={q.author?.email ?? q.author?.name ?? "anonymous"}
+              date={q.creationDate}
+            />
+            {Array.isArray(q.answers) && q.answers.length > 0 && (
+              <div className="ml-6 mt-2 space-y-2">
+                {q.answers.map((a, idx) => (
+                  <Answer
+                    key={a._id ?? a.id ?? idx}
+                    content={a.content}
+                    author={a.author?.email ?? a.author?.name ?? "anonymous"}
+                    date={a.creationDate}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </div>
