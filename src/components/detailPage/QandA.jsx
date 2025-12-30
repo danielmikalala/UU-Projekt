@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useApi } from "../../api/apiClient.js";
 import Question from "./Question.jsx";
-import Answers from "./Answer.jsx"; // use your Answers component
+import Answer from "./Answer.jsx"; // use your Answers component
 
 export default function QandA({ id }) {
   const api = useApi();
@@ -13,7 +13,7 @@ export default function QandA({ id }) {
     if (fetchedRef.current) return campaignData;
     fetchedRef.current = true;
     const res = await api(`/projects/${id}/comments`, { method: "GET" });
-    const payload = Array.isArray(res) ? res : res?.payload ?? [];
+    const payload = Array.isArray(res) ? res : (res?.payload ?? []);
     const list = Array.isArray(payload) ? payload.filter(Boolean) : [];
 
     // build map and attach children by parentCommentId
@@ -33,7 +33,8 @@ export default function QandA({ id }) {
     // collect roots (comments without parent or where parent missing)
     const roots = [];
     byId.forEach((item) => {
-      if (!item.parentCommentId || !byId.has(item.parentCommentId)) roots.push(item);
+      if (!item.parentCommentId || !byId.has(item.parentCommentId))
+        roots.push(item);
     });
 
     return roots;
@@ -65,7 +66,9 @@ export default function QandA({ id }) {
           setCampaignData((prev) =>
             prev.map((q) => {
               if ((q._id ?? q.id) === created.parentCommentId) {
-                const answers = Array.isArray(q.answers) ? [...q.answers, created] : [created];
+                const answers = Array.isArray(q.answers)
+                  ? [...q.answers, created]
+                  : [created];
                 return { ...q, answers };
               }
               return q;
@@ -114,16 +117,21 @@ export default function QandA({ id }) {
           <div key={question._id ?? index} className="mb-6">
             <Question
               content={question.content}
-              author={question.author?.name ?? question.author?.email ?? "anonymous"}
+              author={question.author?.name ?? "anonymous"}
               date={question.creationDate}
             />
-
-            {/* render Answers component only when answers exist */}
-            {Array.isArray(question.answers) && question.answers.length > 0 && (
-              <div className="mt-4 space-y-3">
-                <Answers answers={question.answers} />
-              </div>
-            )}
+            <div className="ml-6 mt-2 space-y-2">
+              {Array.isArray(question.answers) &&
+                question.answers.length > 0 &&
+                question.answers.map((a, i) => (
+                  <Answer
+                    key={a._id ?? a.id ?? i}
+                    content={a.content}
+                    author={a.author?.name ?? "anonymous"}
+                    date={a.creationDate}
+                  />
+                ))}
+            </div>
           </div>
         ))}
       </div>
