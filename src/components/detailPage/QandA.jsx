@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useApi } from "../../api/apiClient.js";
 import Question from "./Question.jsx";
+import Answer from "./Answer.jsx";
 
 export default function QandA({ id }) {
   const api = useApi();
@@ -74,14 +75,30 @@ export default function QandA({ id }) {
       </form>
       <div className="mt-6 border-t pt-4">
         {campaignData.filter(Boolean).map((question, index) => (
-          <Question
-            key={index}
-            content={question.content}
-            author={question.author?.email ?? "anonymous"}
-            date={question.creationDate}
-          />
+          <div key={index}>
+            <Question
+              content={question.content}
+              author={question.author?.name ?? "anonymous"}
+              date={question.creationDate}
+            />
+
+            {/* only show Answer(s) when they exist */}
+            {Array.isArray(question.answers) && question.answers.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {question.answers.map((a, i) => (
+                  <Answer
+                    key={a._id ?? i}
+                    content={a.content}
+                    author={a.author?.name ?? a.author?.email ?? "anonymous"}
+                    date={a.creationDate ?? a.date}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </div>
+      
     </div>
   );
 }

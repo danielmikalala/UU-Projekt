@@ -3,7 +3,6 @@ import Question from "../detailPage/Question.jsx";
 import { useApi } from "../../api/apiClient.js";
 
 export default function QuestionsPanel({ id }) {
-  const [comment, setComment] = useState("");
   const fetchedRef = React.useRef(false);
   const [campaignData, setCampaignData] = useState([]);
   const [answersDrafts, setAnswersDrafts] = useState({});
@@ -15,16 +14,15 @@ export default function QuestionsPanel({ id }) {
     const res = await api(`/projects/${id}/comments`, {
       method: "GET",
     });
-    console.log("Fetched Q&A data:", res);
-    return Array.isArray(res) ? res : (res?.payload ?? []);
+    console.log(res);
+    return await res;
   };
 
   useEffect(() => {
-    fetchedRef.current = false;
     fetchQandAData().then((data) => {
-      setCampaignData(Array.isArray(data) ? data : []);
+      setCampaignData(Array.isArray(data) ? data.filter(Boolean) : []);
     });
-  }, [id]);
+  }, []);
 
   const handleAnswerSubmit = async (e, qid) => {
     e.preventDefault();
@@ -34,8 +32,7 @@ export default function QuestionsPanel({ id }) {
     try {
       const result = await api(`/projects/${id}/comments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text, parentCommentId: qid }),
+        body: { content: text, parentCommentId: qid },
       });
 
       const created = result?.payload ?? result;
@@ -57,28 +54,7 @@ export default function QuestionsPanel({ id }) {
       console.log("Posted answer:", result);
     } catch (err) {
       console.error("Error posting answer (saved locally):", err);
-      const created = {
-        _id: `local-${Date.now()}`,
-        content: text,
-        authorId: "You",
-        creationDate: new Date().toISOString(),
-        _local: true,
-        parentCommentId: qid,
-      };
-
-      setAnswersDrafts((prev) => ({ ...prev, [qid]: "" }));
-
-      setCampaignData((prev) =>
-        prev.map((q) => {
-          if (q._id === qid) {
-            const answers = Array.isArray(q.answers)
-              ? [...q.answers, created]
-              : [created];
-            return { ...q, answers };
-          }
-          return q;
-        })
-      );
+      setAnswersDrafts((prev) => ({ ...prev, [qid]: text }));
     }
   };
 
@@ -93,19 +69,16 @@ export default function QuestionsPanel({ id }) {
               <div key={qid} className="mb-6">
                 <Question
                   content={question.content}
-                  author={question.author?.email ?? "anonymous"}
+                  author={question.author?.name ?? "anonymous"}
                   date={question.creationDate}
                 />
                 {Array.isArray(question.answers) &&
                   question.answers.length > 0 && (
                     <div className="ml-6 mt-2 space-y-2">
                       {question.answers.map((a, i) => (
-                        <div
-                          key={a._id ?? a.id ?? i}
-                          className="text-sm text-gray-700"
-                        >
+                        <div key={i} className="text-sm text-gray-700">
                           <div className="font-medium">
-                            {a.authorId ?? a.author ?? "Anonymous"}
+                            {a.author?.name ?? "Anonymous"}
                           </div>
                           <div>{a.content}</div>
                         </div>
