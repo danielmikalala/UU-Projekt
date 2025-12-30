@@ -14,36 +14,40 @@ export default function QandA({ id }) {
     const res = await api(`/projects/${id}/comments`, {
       method: "GET",
     });
-    return res;
+    console.log(res);
+    return await res;
   };
-  useEffect(() => {
-    // reset fetch guard when id changes so we load new data
-    fetchedRef.current = false;
-    fetchQandAData().then((data) => {
-      setCampaignData(Array.isArray(data) ? data : []);
-    });
-  }, [id]);
+    useEffect(() => {
+      fetchQandAData().then((data) => {
+        setCampaignData(Array.isArray(data) ? data.filter(Boolean) : []);
+      });
+    }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-     if (!comment.trim()) return;
+    if (!comment.trim()) return;
     try {
-      // backend expects { content: ... }
       const result = await api(`/projects/${id}/comments`, {
         method: "POST",
-        body: { content: comment },
+        body: { content: comment.trim() },
       });
-
+      const created = result?.payload ?? result ?? null;
+      console.log(created);
       setComment("");
 
-      setCampaignData((prev) =>
-        Array.isArray(prev) ? [...prev, result] : [result]
-      );
+      if (created) {
+        setCampaignData((prev) =>
+          Array.isArray(prev) ? [...prev, created] : [created]
+        );
+      } else {
+        fetchedRef.current = false;
+        const refreshed = await fetchQandAData();
+        setCampaignData(Array.isArray(refreshed) ? refreshed : []);
+      }
 
-      console.log("Backend response:", result);
+      console.log("Backend response (normalized):", created);
     } catch (error) {
       console.error("Error submitting question:", error);
-      // don't re-throw to avoid uncaught promise in UI
     }
   };
 
@@ -69,11 +73,11 @@ export default function QandA({ id }) {
         </button>
       </form>
       <div className="mt-6 border-t pt-4">
-        {campaignData.map((question, index) => (
+        {campaignData.filter(Boolean).map((question, index) => (
           <Question
             key={index}
             content={question.content}
-            author={question.authorId}
+            author={question.author?.email ?? "anonymous"}
             date={question.creationDate}
           />
         ))}
