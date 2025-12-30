@@ -16,7 +16,7 @@ export default function CampaignList() {
         fetchedRef.current = true;
 
         const resCat = await api("/categories", {method: "GET"});
-        const resCam = await api("/projects", {method: "GET"});
+        const resCam = await api("/projects?showOnlyApproved=true", {method: "GET"});
 
         setCategories(resCat);
         setCampaigns(resCam);
