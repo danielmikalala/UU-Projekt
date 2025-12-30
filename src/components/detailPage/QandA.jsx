@@ -82,7 +82,6 @@ export default function QandA({ id }) {
               date={question.creationDate}
             />
 
-            {/* only show Answer(s) when they exist */}
             {Array.isArray(question.answers) && question.answers.length > 0 && (
               <div className="mt-4 space-y-3">
                 {question.answers.map((a, i) => (
