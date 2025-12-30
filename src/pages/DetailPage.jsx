@@ -92,7 +92,7 @@ export default function DetailPage() {
 
             <PostLog id={id} />
 
-            <QandA />
+            <QandA id={id} />
         </div>
     );
     //todo: update when category implemented on be

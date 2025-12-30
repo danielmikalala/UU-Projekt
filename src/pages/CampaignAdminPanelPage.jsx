@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import GoBackButton from "../components/buttons/GoBackButton.jsx";
 import CreateCampaignUpdatePostForm from "../components/forms/CreateCampaignUpdatePostForm.jsx";
 import ProjectUpdateForm from "../components/adminPanel/ProjectUpdateForm.jsx";
+import QuestionsPanel from "../components/managedCampains/QuestionsPanel.jsx";
 
 const TABS = [
   { id: "edit", label: "Edit details" },
@@ -121,11 +122,7 @@ export default function CampaignAdminPanelPage() {
         {/* ---------- QUESTIONS TAB ---------- */}
         {activeTab === "qa" && (
             <section className="mt-8 space-y-6">
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Questions (coming soon) 🙂
-                </h3>
-              </div>
+              <QuestionsPanel id={id} />
             </section>
         )}
       </div>
