@@ -66,6 +66,8 @@ export function useApi() {
       return null;
     }
 
+    const text = await response.text();
+return text ? JSON.parse(text) : null;
     if (contentType && contentType.includes("application/json")) {
       try {
         return JSON.parse(text);

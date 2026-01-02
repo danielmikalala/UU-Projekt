@@ -17,7 +17,9 @@ export default function AdminPanelList() {
   const api = useApi();
   const [activeTab, setActiveTab] = useState("categories");
   const [categories, setCategories] = useState([]);
+  const [users, setUsers] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [addError, setAddError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -28,6 +30,17 @@ export default function AdminPanelList() {
   const [users, setUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const { campaigns } = useCampaigns();
+  const api = useApi();
+
+  const fetchCategories = async () => {
+    const res = await api("/categories", { method: "GET" });
+    const list = res?.data ?? res?.result ?? res ?? [];
+    setCategories(list.filter((c) => c && c.name));
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -71,43 +84,45 @@ export default function AdminPanelList() {
 
   const handleAddCategory = async (event) => {
     event.preventDefault();
+
     const trimmedName = newCategoryName.trim();
+    if (!trimmedName) return;
 
-    if (!trimmedName) {
-      return;
-    }
+    setAddError("");
 
-    const alreadyExists = categories.some(
-      (category) =>
-        (category.name || "").toLowerCase() === trimmedName.toLowerCase(),
+    const exists = categories.some(
+      (c) => c?.name?.toLowerCase() === trimmedName.toLowerCase()
     );
 
-    if (alreadyExists) {
-      setError("Category with this name already exists");
-      setNewCategoryName("");
+    if (exists) {
+      setAddError("Category already exists");
       return;
     }
 
     try {
-      setIsAdding(true);
-      setError("");
       await api("/categories", {
         method: "POST",
-        body: {
-          name: trimmedName,
-        },
+        body: JSON.stringify({ name: trimmedName }),
       });
 
-      const updatedCategories = await api("/categories", { method: "GET" });
-      setCategories(updatedCategories || []);
+      await fetchCategories();
       setNewCategoryName("");
-    } catch (err) {
-      console.error("Error creating category:", err);
-      setError(err.message || "Failed to create category");
-    } finally {
-      setIsAdding(false);
+    } catch (error) {
+      if (error?.message?.includes("409")) {
+        setAddError("Category already exists");
+      } else {
+        console.error("Failed to create category", error);
+      }
     }
   };
+
+
+    //refetch update
+    setNewCategoryName("");
+  } catch (error) {
+    console.error("Failed to create category", error);
+  }
+};
 
   const handleDeleteCategory = (category) => {
     setCategoryToDelete(category);
@@ -117,32 +132,16 @@ export default function AdminPanelList() {
   const handleConfirmDelete = async () => {
     if (!categoryToDelete) return;
 
-    const categoryId = categoryToDelete._id || categoryToDelete.id;
-    if (!categoryId) {
-      setError("Category ID not found");
-      setIsDeleteModalOpen(false);
-      setCategoryToDelete(null);
-      return;
-    }
-
     try {
-      setIsAdding(true);
-      setError("");
-      await api(`/categories/${categoryId}`, {
+      await api(`/categories/${categoryToDelete.id}`, {
         method: "DELETE",
       });
 
-      const updatedCategories = await api("/categories", { method: "GET" });
-      setCategories(updatedCategories || []);
+      await fetchCategories();
       setIsDeleteModalOpen(false);
       setCategoryToDelete(null);
-    } catch (err) {
-      console.error("Error deleting category:", err);
-      setError(err.message || "Failed to delete category");
-      setIsDeleteModalOpen(false);
-      setCategoryToDelete(null);
-    } finally {
-      setIsAdding(false);
+    } catch (error) {
+      console.error("Failed to delete category", error);
     }
   };
 
@@ -161,14 +160,8 @@ export default function AdminPanelList() {
     setEditingCategory(null);
   };
 
-  const handleSaveCategory = (updatedCategory) => {
-    setCategories((prev) =>
-      prev.map((category) =>
-        (category._id || category.id) === (updatedCategory._id || updatedCategory.id)
-          ? updatedCategory
-          : category,
-      ),
-    );
+  const handleSaveCategory = async () => {
+    await fetchCategories();
   };
 
   return (
@@ -203,21 +196,40 @@ export default function AdminPanelList() {
               Add New Category
             </h2>
             <form
-              className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center"
+              className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start"
               onSubmit={handleAddCategory}
             >
-              <input
-                type="text"
-                value={newCategoryName}
-                onChange={(event) => setNewCategoryName(event.target.value)}
-                placeholder="Category name"
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
-              />
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => {
+                    setNewCategoryName(e.target.value);
+                    setAddError("");
+                  }}
+                  placeholder="Category name"
+                  className={`w-full rounded-md border px-3 py-2 text-sm ${
+                    addError
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-gray-300"
+                  }`}
+                />
+                {addError && (
+                  <div className="absolute left-0 top-full mt-2 z-10">
+                    <div className="relative rounded-md bg-red-500 px-3 py-1.5 text-xs text-white shadow-lg">
+                      {addError}
+                      <div className="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-red-500" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <PrimaryButton
                 type={isAddDisabled ? "button" : "submit"}
-                icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-                disabled={isAddDisabled}
-                className={`${isAddDisabled ? "pointer-events-none opacity-60" : ""} !bg-purple-600 !border-purple-600 hover:!bg-purple-700`}
+                icon={<Plus className="h-4 w-4" />}
+                className={`${
+                  isAddDisabled ? "pointer-events-none opacity-60" : ""
+                } !bg-purple-600 !border-purple-600`}
               >
                 {isAdding ? "Adding..." : "Add"}
               </PrimaryButton>
@@ -231,42 +243,37 @@ export default function AdminPanelList() {
           )}
 
           <div className="space-y-4">
-            {isLoading ? (
-              <div className="text-center text-gray-500 py-4">Loading categories...</div>
-            ) : categories.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">No categories yet. Create one above!</div>
-            ) : (
-              categories.map((category) => (
+            {categories
+              .filter((category) => category && category.name)
+              .map((category) => (
                 <div
-                  key={category._id || category.id}
+                  key={category.id}
                   className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
                 >
-                <div>
-                  <p className="text-base font-semibold text-gray-900">
-                    {category.name}
-                  </p>
+                  <div>
+                    <p className="text-base font-semibold text-gray-900">
+                      {category.name}
+                    </p>
+                    <p className="text-sm text-gray-500">{category.slug}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditCategory(category)}
+                      className="inline-flex items-center gap-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(category)}
+                      className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditCategory(category)}
-                    aria-label={`Edit ${category.name}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
-                  >
-                    <Pencil className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCategory(category)}
-                    aria-label={`Delete ${category.name}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
-              ))
-            )}
+              ))}
           </div>
         </section>
       )}
@@ -277,10 +284,6 @@ export default function AdminPanelList() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Campaign Management
             </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Review and approve submitted campaigns. Campaigns with
-              "PendingApproval" status can be approved or rejected.
-            </p>
 
             {campaigns.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
