@@ -31,7 +31,7 @@ export default function Navigation() {
                 <div className="flex items-center justify-between gap-3">
                     <div className="text-xl font-extrabold text-gray-900 flex justify-center items-center align-middle">
                         <Link to="/">
-                            CrowdFund
+                            uuSTARTER
                         </Link>
                     </div>
 
