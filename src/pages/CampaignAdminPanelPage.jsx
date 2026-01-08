@@ -5,6 +5,8 @@ import GoBackButton from "../components/buttons/GoBackButton.jsx";
 import CreateCampaignUpdatePostForm from "../components/forms/CreateCampaignUpdatePostForm.jsx";
 import ProjectUpdateForm from "../components/adminPanel/ProjectUpdateForm.jsx";
 import QuestionsPanel from "../components/managedCampains/QuestionsPanel.jsx";
+import PostLog from "../components/detailPage/PostLog.jsx";
+
 
 const TABS = [
   { id: "edit", label: "Edit details" },
@@ -20,8 +22,9 @@ export default function CampaignAdminPanelPage() {
   const [loadingProject, setLoadingProject] = useState(false);
   const [projectError, setProjectError] = useState("");
 
+  const [postsReloadKey, setPostsReloadKey] = useState(0);
+
   useEffect(() => {
-    // načítáme jen když je otevřený edit tab (šetří requesty)
     if (activeTab !== "edit") return;
 
     let cancelled = false;
@@ -66,7 +69,6 @@ export default function CampaignAdminPanelPage() {
         <GoBackButton />
         <h3 className="text-2xl font-semibold mr-6">Manage Campaign {id}</h3>
 
-        {/* Taby */}
         <div className="mt-8 flex flex-wrap gap-2">
           {TABS.map((tab) => {
             const isActive = tab.id === activeTab;
@@ -87,7 +89,6 @@ export default function CampaignAdminPanelPage() {
           })}
         </div>
 
-        {/* ---------- EDIT DETAILS TAB ---------- */}
         {activeTab === "edit" && (
             <section className="mt-8 space-y-6">
               <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
@@ -112,14 +113,17 @@ export default function CampaignAdminPanelPage() {
             </section>
         )}
 
-        {/* ---------- POST UPDATE TAB ---------- */}
         {activeTab === "update" && (
             <section className="mt-8 space-y-6">
-              <CreateCampaignUpdatePostForm id={id} />
+              <CreateCampaignUpdatePostForm
+                  id={id}
+                  onSuccess={() => setPostsReloadKey((k) => k + 1)}
+              />
+
+              <PostLog id={id} reloadKey={postsReloadKey} />
             </section>
         )}
 
-        {/* ---------- QUESTIONS TAB ---------- */}
         {activeTab === "qa" && (
             <section className="mt-8 space-y-6">
               <QuestionsPanel id={id} />

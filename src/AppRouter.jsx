@@ -11,6 +11,7 @@ import AuthPage from "./pages/AuthPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import EditProjectPage from "./pages/EditProjectPage.jsx";
 
+
 export default function AppRouter() {
     return (
         <BrowserRouter>
@@ -32,6 +33,7 @@ export default function AppRouter() {
                             </RequireAuth>
                         }
                     />
+
 
                     <Route
                         path="/admin"
