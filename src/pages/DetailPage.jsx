@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import GoBackButton from "../components/buttons/GoBackButton.jsx";
-import DetailPageHeader from "../components/detailPage/detailPageHeader.jsx";
+import DetailPageHeader from "../components/detailPage/DetailPageHeader.jsx";
 import AboutPanel from "../components/detailPage/AboutPanel.jsx";
 import QandA from "../components/detailPage/QandA.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -19,7 +19,6 @@ export default function DetailPage() {
     const fetchDetailData = async () => {
         setError("");
         setLoading(true);
-
         try {
             const res = await fetch(`/projects/${id}`, {
                 method: "GET",
@@ -85,7 +84,7 @@ export default function DetailPage() {
 
             <DetailPageHeader
                 name={detailData?.name}
-                category={/*detailData.category*/ "<category>"}
+                category={detailData?.categoryName}
             />
 
             <AboutPanel content={detailData?.description} />
