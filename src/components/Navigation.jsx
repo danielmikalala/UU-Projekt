@@ -56,7 +56,7 @@ export default function Navigation() {
                   aria-label="My campaigns"
                   className="w-full lg:w-auto"
                 >
-                  Manage
+                  Manage Campaigns
                 </PrimaryButton>
               </Link>
               <PrimaryButton
@@ -64,7 +64,7 @@ export default function Navigation() {
                 icon={<PlusIcon />}
                 className="flex-1 w-full lg:w-auto lg:flex-none"
               >
-                Create
+                Create Campaign
               </PrimaryButton>
             </div>
           </div>
