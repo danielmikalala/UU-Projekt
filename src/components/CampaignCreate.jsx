@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import { useCampaigns } from "../hooks/useCampaigns.js";
@@ -17,30 +17,23 @@ export default function CampaignCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState([]);
+  const hasFetchedCategories = useRef(false);
 
   useEffect(() => {
+    if (hasFetchedCategories.current) return;
+    hasFetchedCategories.current = true;
+
     const fetchCategories = async () => {
       try {
         const categoriesData = await api("/categories", { method: "GET" });
         setCategories(categoriesData || []);
       } catch (err) {
         console.error("Error fetching categories:", err);
-        setCategories([
-          { _id: "1", name: "Technology" },
-          { _id: "2", name: "Arts & Culture" },
-          { _id: "3", name: "Community" },
-          { _id: "4", name: "Education" },
-          { _id: "5", name: "Environment" },
-          { _id: "6", name: "Health & Medical" },
-          { _id: "7", name: "Sports & Recreation" },
-          { _id: "8", name: "Business & Entrepreneurship" },
-          { _id: "9", name: "Charity & Fundraising" },
-          { _id: "10", name: "Other" },
-        ]);
+        setCategories([]);
       }
     };
     fetchCategories();
-  }, [api]);
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -181,11 +174,12 @@ export default function CampaignCreate() {
               </label>
               <select
                 id="category"
+                required
                 value={formData.category}
                 onChange={(e) => handleInputChange("category", e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100 bg-white"
               >
-                <option value="">Select a category (optional)</option>
+                <option value="">Select a category</option>
                 {categories.map((category) => (
                   <option
                     key={category._id || category.id}
