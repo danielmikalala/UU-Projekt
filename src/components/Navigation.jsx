@@ -1,11 +1,9 @@
 import {Link, useNavigate, useLocation} from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import {
-    GearIcon,
-    CollectionIcon,
     PlusIcon,
-    LogoutIcon,
 } from "./buttons/icons";
+import { TbLogout2, TbSettings, TbBook } from "react-icons/tb";
 import {useAuth} from "../context/AuthContext.jsx";
 
 export default function Navigation() {
@@ -43,12 +41,12 @@ export default function Navigation() {
                             <PrimaryButton
                                 onClick={handleLogout}
                                 aria-label="Logout"
-                                icon={<LogoutIcon/>}
+                                icon={<TbLogout2 className="h-4 w-4"/>}
                             />
                             {user?.role.toLowerCase() === "admin" && (
                                 <Link to="/admin" className="no-underline">
                                     <PrimaryButton
-                                        icon={<GearIcon/>}
+                                        icon={<TbSettings className="h-4 w-4"/>}
                                         aria-label="Admin panel"
                                     />
                                 </Link>
@@ -61,7 +59,7 @@ export default function Navigation() {
                                 className="no-underline flex-1 lg:flex-none"
                             >
                                 <PrimaryButton
-                                    icon={<CollectionIcon/>}
+                                    icon={<TbBook className="h-4 w-4"/>}
                                     aria-label="My campaigns"
                                     className="w-full lg:w-auto"
                                 >
