@@ -1,10 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, Shield } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
-import { useCampaigns } from "../../hooks/useCampaigns.js";
 import { useApi } from "../../api/apiClient.js";
 
 const TABS = [
@@ -15,28 +14,28 @@ const TABS = [
 
 export default function AdminPanelList() {
   const api = useApi();
-
   const [activeTab, setActiveTab] = useState("categories");
+  const [campaignSubTab, setCampaignSubTab] = useState("PendingApproval");
   const [categories, setCategories] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
+  const [users, setUsers] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState("");
-  const [users, setUsers] = useState([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-
-  const { campaigns } = useCampaigns();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setIsLoading(true);
-        const data = await api("/categories");
-        setCategories(data || []);
+        const categoriesData = await api("/categories", { method: "GET" });
+        setCategories(categoriesData || []);
         setError("");
       } catch (err) {
         console.error("Error fetching categories:", err);
@@ -45,27 +44,45 @@ export default function AdminPanelList() {
         setIsLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      if (activeTab !== "users") return;
+    if (activeTab === "campaigns") {
+      const fetchCampaigns = async () => {
+        try {
+          setIsLoadingCampaigns(true);
+          const campaignsData = await api("/projects", { method: "GET" });
+          setCampaigns(campaignsData || []);
+          setError("");
+        } catch (err) {
+          console.error("Error fetching campaigns:", err);
+          setError("Failed to load campaigns");
+        } finally {
+          setIsLoadingCampaigns(false);
+        }
+      };
+      fetchCampaigns();
+    }
+  }, [activeTab]);
 
-      try {
-        setIsLoadingUsers(true);
-        const usersData = await api("/users");
-        setUsers(usersData || []);
-      } catch (err) {
-        console.error("Error fetching users:", err);
-        setError("Failed to load users");
-      } finally {
-        setIsLoadingUsers(false);
-      }
-    };
-
-    fetchUsers();
+  useEffect(() => {
+    if (activeTab === "users") {
+      const fetchUsers = async () => {
+        try {
+          setIsLoadingUsers(true);
+          const usersData = await api("/users", { method: "GET" });
+          setUsers(usersData || []);
+          setError("");
+        } catch (err) {
+          console.error("Error fetching users:", err);
+          setError("Failed to load users");
+        } finally {
+          setIsLoadingUsers(false);
+        }
+      };
+      fetchUsers();
+    }
   }, [activeTab]);
 
   const isAddDisabled = useMemo(
@@ -76,7 +93,10 @@ export default function AdminPanelList() {
   const handleAddCategory = async (event) => {
     event.preventDefault();
     const trimmedName = newCategoryName.trim();
-    if (!trimmedName) return;
+
+    if (!trimmedName) {
+      return;
+    }
 
     const alreadyExists = categories.some(
       (category) =>
@@ -92,14 +112,15 @@ export default function AdminPanelList() {
     try {
       setIsAdding(true);
       setError("");
-
       await api("/categories", {
         method: "POST",
-        body: { name: trimmedName },
+        body: {
+          name: trimmedName,
+        },
       });
 
-      const data = await api("/categories");
-      setCategories(data || []);
+      const updatedCategories = await api("/categories", { method: "GET" });
+      setCategories(updatedCategories || []);
       setNewCategoryName("");
     } catch (err) {
       console.error("Error creating category:", err);
@@ -115,25 +136,65 @@ export default function AdminPanelList() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!categoryToDelete?._id) return;
+    if (!categoryToDelete) return;
+
+    const categoryId = categoryToDelete._id || categoryToDelete.id;
+    if (!categoryId) {
+      setError("Category ID not found");
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
+      return;
+    }
 
     try {
       setIsAdding(true);
       setError("");
-
-      await api(`/categories/${categoryToDelete._id}`, {
+      await api(`/categories/${categoryId}`, {
         method: "DELETE",
       });
 
-      const data = await api("/categories");
-      setCategories(data || []);
+      const updatedCategories = await api("/categories", { method: "GET" });
+      setCategories(updatedCategories || []);
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
     } catch (err) {
       console.error("Error deleting category:", err);
       setError(err.message || "Failed to delete category");
-    } finally {
-      setIsAdding(false);
       setIsDeleteModalOpen(false);
       setCategoryToDelete(null);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleToggleRole = async (user, newRole) => {
+    const userId = user._id || user.id;
+    if (!userId) {
+      setError("User ID not found");
+      return;
+    }
+
+    try {
+      setError("");
+      await api(`/users/${userId}`, {
+        method: "PATCH",
+        body: { role: newRole },
+      });
+
+      const updatedUsers = await api("/users", { method: "GET" });
+      setUsers(updatedUsers || []);
+    } catch (err) {
+      console.error("Error updating user role:", err);
+      setError(err.message || "Failed to update user role");
+    }
+  };
+
+  const refetchCampaigns = async () => {
+    try {
+      const campaignsData = await api("/projects", { method: "GET" });
+      setCampaigns(campaignsData || []);
+    } catch (err) {
+      console.error("Error refetching campaigns:", err);
     }
   };
 
@@ -221,14 +282,15 @@ export default function AdminPanelList() {
               <input
                 type="text"
                 value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
+                onChange={(event) => setNewCategoryName(event.target.value)}
                 placeholder="Category name"
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
               />
               <PrimaryButton
                 type={isAddDisabled ? "button" : "submit"}
-                icon={<Plus className="h-4 w-4" />}
+                icon={<Plus className="h-4 w-4" strokeWidth={2} />}
                 disabled={isAddDisabled}
+                className={`${isAddDisabled ? "pointer-events-none opacity-60" : ""} !bg-purple-600 !border-purple-600 hover:!bg-purple-700`}
               >
                 {isAdding ? "Adding..." : "Add"}
               </PrimaryButton>
@@ -236,42 +298,46 @@ export default function AdminPanelList() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 border border-red-200 p-3">
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 mb-4">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
           <div className="space-y-4">
             {isLoading ? (
-              <div className="text-center text-gray-500 py-4">
-                Loading categories...
-              </div>
+              <div className="text-center text-gray-500 py-4">Loading categories...</div>
             ) : categories.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">
-                No categories yet.
-              </div>
+              <div className="text-center text-gray-500 py-4">No categories yet. Create one above!</div>
             ) : (
               categories.map((category) => (
                 <div
-                  key={category._id}
-                  className="flex items-center justify-between rounded-md border bg-white px-5 py-4 shadow-sm"
+                  key={category._id || category.id}
+                  className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
                 >
-                  <p className="font-semibold">{category.name}</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditCategory(category)}
-                      className="rounded-md bg-blue-500 px-3 py-2 text-white"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category)}
-                      className="rounded-md bg-red-500 px-3 py-2 text-white"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    {category.name}
+                  </p>
                 </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleEditCategory(category)}
+                    aria-label={`Edit ${category.name}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+                  >
+                    <Pencil className="h-4 w-4" strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(category)}
+                    aria-label={`Delete ${category.name}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={2} />
+                  </button>
+                </div>
+              </div>
               ))
             )}
           </div>
@@ -284,24 +350,86 @@ export default function AdminPanelList() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Campaign Management
             </h2>
-            {campaigns.length === 0 ? (
+            <p className="text-sm text-gray-600 mb-4">
+              Review and approve submitted campaigns. Campaigns with
+              "Pending" status can be approved or rejected.
+            </p>
+
+            <div className="flex gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setCampaignSubTab("PendingApproval");
+                  setError("");
+                }}
+                className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                  campaignSubTab === "PendingApproval"
+                    ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCampaignSubTab("Approved");
+                  setError("");
+                }}
+                className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                  campaignSubTab === "Approved"
+                    ? "bg-green-100 text-green-800 border border-green-300"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Approved
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCampaignSubTab("Rejected");
+                  setError("");
+                }}
+                className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                  campaignSubTab === "Rejected"
+                    ? "bg-red-100 text-red-800 border border-red-300"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Rejected
+              </button>
+            </div>
+
+            {error && (
+              <div className="rounded-md bg-red-50 border border-red-200 p-3 mb-4">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            {isLoadingCampaigns ? (
+              <div className="text-center text-gray-500 py-4">Loading campaigns...</div>
+            ) : filteredCampaigns.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
-                No campaigns submitted yet.
+                No {campaignSubTab === "PendingApproval" ? "pending" : campaignSubTab.toLowerCase()} campaigns.
               </div>
             ) : (
               <div className="space-y-4">
-                {campaigns.map((campaign) => (
+                {filteredCampaigns.map((campaign) => (
                   <ProjectApprovalPanel
-                    key={campaign.id}
+                    key={campaign._id || campaign.id}
                     project={{
-                      _id: campaign.id,
-                      title: campaign.title,
+                      _id: campaign._id || campaign.id,
+                      title: campaign.name || campaign.title,
                       description: campaign.description,
                       category: campaign.category,
-                      fundingGoal: campaign.fundingGoal,
+                      categoryId: campaign.categoryId,
+                      fundingGoal: campaign.goalAmount || campaign.fundingGoal,
+                      currentAmount: campaign.currentAmount || 0,
+                      deadLine: campaign.deadLine,
                       status: campaign.status,
                       createdAt: campaign.createdAt,
                     }}
+                    onStatusChanged={refetchCampaigns}
                   />
                 ))}
               </div>
@@ -311,39 +439,79 @@ export default function AdminPanelList() {
       )}
 
       {activeTab === "users" && (
-        <section className="mt-8 space-y-4">
-          {isLoadingUsers ? (
-            <div className="text-center text-gray-500">Loading users...</div>
-          ) : users.length === 0 ? (
-            <div className="text-center text-gray-500">No users found.</div>
-          ) : (
+        <section className="mt-8 space-y-6">
+          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              User Management
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Manage user roles and permissions.
+            </p>
+
+            {error && (
+              <div className="rounded-md bg-red-50 border border-red-200 p-3 mb-4">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
             <div className="space-y-4">
-              {users.map((user) => {
-                const isAdmin = user.role === "Admin" || user.role === "admin";
-                return (
+              {isLoadingUsers ? (
+                <div className="text-center text-gray-500 py-4">Loading users...</div>
+              ) : users.length === 0 ? (
+                <div className="text-center text-gray-500 py-4">No users found.</div>
+              ) : (
+                users.map((user) => (
                   <div
-                    key={user._id}
-                    className="flex items-center justify-between rounded-md border bg-white px-5 py-4 shadow-sm"
+                    key={user._id || user.id}
+                    className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
                   >
                     <div>
-                      <p className="font-semibold">
+                      <p className="text-base font-semibold text-gray-900">
                         {user.name || user.email}
                       </p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Shield
-                        className={`h-4 w-4 ${
-                          isAdmin ? "text-purple-600" : "text-gray-400"
-                        }`}
-                      />
-                      <span>{isAdmin ? "Admin" : "User"}</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-700 flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                          Admin
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={user.role === "ADMIN"}
+                            onChange={() => handleToggleRole(user, "ADMIN")}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-700 flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          User
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={user.role === "USER"}
+                            onChange={() => handleToggleRole(user, "USER")}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-400"></div>
+                        </label>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+                ))
+              )}
             </div>
-          )}
+          </div>
         </section>
       )}
 
