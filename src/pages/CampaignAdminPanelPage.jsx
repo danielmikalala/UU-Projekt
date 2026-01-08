@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import GoBackButton from "../components/buttons/GoBackButton.jsx";
+import CampaignRemoveBtn from "../components/buttons/CampaignRemoveBtn.jsx";
 import CreateCampaignUpdatePostForm from "../components/forms/CreateCampaignUpdatePostForm.jsx";
 import ProjectUpdateForm from "../components/adminPanel/ProjectUpdateForm.jsx";
 import QuestionsPanel from "../components/managedCampains/QuestionsPanel.jsx";
@@ -21,7 +22,6 @@ export default function CampaignAdminPanelPage() {
   const [projectError, setProjectError] = useState("");
 
   useEffect(() => {
-    // načítáme jen když je otevřený edit tab (šetří requesty)
     if (activeTab !== "edit") return;
 
     let cancelled = false;
@@ -62,69 +62,80 @@ export default function CampaignAdminPanelPage() {
   }, [id, activeTab]);
 
   return (
-      <div className="mx-auto w-full max-w-7xl px-4 py-10">
-        <GoBackButton />
-        <h3 className="text-2xl font-semibold mr-6">Manage Campaign {id}</h3>
-
-        {/* Taby */}
-        <div className="mt-8 flex flex-wrap gap-2">
-          {TABS.map((tab) => {
-            const isActive = tab.id === activeTab;
-            return (
-                <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
-                        isActive
-                            ? "bg-gray-900 text-white shadow-sm"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                >
-                  {tab.label}
-                </button>
-            );
-          })}
+    <div className="mx-auto w-full max-w-7xl px-4 py-10">
+      <div className="flex items-start justify-between">
+        <div>
+          <GoBackButton />
+          <h3 className="mt-2 text-2xl font-semibold">
+            Manage Campaign {id}
+          </h3>
         </div>
 
-        {/* ---------- EDIT DETAILS TAB ---------- */}
-        {activeTab === "edit" && (
-            <section className="mt-8 space-y-6">
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Campaign Details
-                </h2>
-
-                {loadingProject && (
-                    <p className="text-sm text-gray-600">Loading project…</p>
-                )}
-
-                {projectError && (
-                    <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
-                      {projectError}
-                    </div>
-                )}
-
-                {!loadingProject && project && (
-                    <ProjectUpdateForm projectId={id} initialValues={project} />
-                )}
-              </div>
-            </section>
-        )}
-
-        {/* ---------- POST UPDATE TAB ---------- */}
-        {activeTab === "update" && (
-            <section className="mt-8 space-y-6">
-              <CreateCampaignUpdatePostForm id={id} />
-            </section>
-        )}
-
-        {/* ---------- QUESTIONS TAB ---------- */}
-        {activeTab === "qa" && (
-            <section className="mt-8 space-y-6">
-              <QuestionsPanel id={id} />
-            </section>
-        )}
+        <CampaignRemoveBtn
+          campaignId={id}
+          campaignName={project?.name}
+        />
       </div>
+
+      {/* TABS */}
+      <div className="mt-8 flex flex-wrap gap-2">
+        {TABS.map((tab) => {
+          const isActive = tab.id === activeTab;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                isActive
+                  ? "bg-gray-900 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeTab === "edit" && (
+        <section className="mt-8 space-y-6">
+          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              Campaign Details
+            </h2>
+
+            {loadingProject && (
+              <p className="text-sm text-gray-600">Loading project…</p>
+            )}
+
+            {projectError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+                {projectError}
+              </div>
+            )}
+
+            {!loadingProject && project && (
+              <ProjectUpdateForm
+                projectId={id}
+                initialValues={project}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {activeTab === "update" && (
+        <section className="mt-8 space-y-6">
+          <CreateCampaignUpdatePostForm id={id} />
+        </section>
+      )}
+
+      {activeTab === "qa" && (
+        <section className="mt-8 space-y-6">
+          <QuestionsPanel id={id} />
+        </section>
+      )}
+    </div>
   );
 }
