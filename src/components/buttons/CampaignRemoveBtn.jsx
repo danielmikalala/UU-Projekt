@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { useApi } from "../../api/apiClient";
 import ConfirmDeleteModal from "../adminPanel/ConfirmDeleteModal.jsx";
+import {useAuth} from "../../context/AuthContext.jsx";
 
 export default function CampaignRemoveBtn({ campaignId, campaignName }) {
-  const api = useApi();
+  const {token} = useAuth();
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,10 +15,14 @@ export default function CampaignRemoveBtn({ campaignId, campaignName }) {
   const handleConfirmDelete = async () => {
     try {          
       setLoading(true);
-      await api(`/projects/${campaignId}`, {
-        method: "DELETE",
-      });
-      navigate("/my-campaigns");
+        await fetch(`/projects/${campaignId}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        navigate(`/home`);
     } catch (e) {
       alert(e.message || "Failed to delete campaign");
     } finally {
