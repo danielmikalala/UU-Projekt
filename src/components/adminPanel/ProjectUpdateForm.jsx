@@ -123,22 +123,37 @@ export default function ProjectUpdateForm({
       return;
     }
 
+    // Convert category name to categoryId
+    let categoryId = undefined;
+    if (form.category) {
+      const selectedCategory = categories.find(
+        (cat) => cat.name === form.category
+      );
+      if (selectedCategory?._id) {
+        categoryId = selectedCategory._id;
+      }
+    }
+
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
       goalAmount: goalAmountNumber,
       deadLine: toIsoOrEmpty(form.deadLine),
-      category: form.category || undefined,
       status: form.status,
     };
 
+    if (categoryId) {
+      payload.categoryId = categoryId;
+    }
+
+    console.log("Submitting update with payload:", payload);
     try {
       // ✅ Swagger says POST /projects/{projectId}
       await api(`/projects/${projectId}`, {
         method: "POST",
         body: payload,
       });
-
+console.log(payload);
       setSuccess("Saved successfully ✅");
 
       if (onSuccess) {
