@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
+import { FaRegUser, FaShieldAlt } from "react-icons/fa";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
@@ -503,63 +504,25 @@ export default function AdminPanelList() {
                         </p>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-700 flex items-center gap-1">
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                              />
-                            </svg>
-                            Admin
-                          </span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={user.role === "ADMIN"}
-                              onChange={() => handleToggleRole(user, "ADMIN")}
-                              disabled={isUpdating}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:cursor-not-allowed"></div>
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-700 flex items-center gap-1">
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                            User
-                          </span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={user.role === "USER"}
-                              onChange={() => handleToggleRole(user, "USER")}
-                              disabled={isUpdating}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-400 peer-disabled:cursor-not-allowed"></div>
-                          </label>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-sm flex items-center gap-1 ${user.role === "USER" ? "font-semibold text-gray-900" : "text-gray-600"}`}>
+                          <FaRegUser className="w-4 h-4" />
+                          User
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={user.role === "ADMIN"}
+                            onChange={() => handleToggleRole(user, user.role === "ADMIN" ? "USER" : "ADMIN")}
+                            disabled={isUpdating}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:cursor-not-allowed"></div>
+                        </label>
+                        <span className={`text-sm flex items-center gap-1 ${user.role === "ADMIN" ? "font-semibold text-gray-900" : "text-gray-600"}`}>
+                          <FaShieldAlt className="w-4 h-4" />
+                          Admin
+                        </span>
                       </div>
                     </div>
                   );
