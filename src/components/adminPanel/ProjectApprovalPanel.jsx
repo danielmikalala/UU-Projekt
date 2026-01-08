@@ -1,22 +1,11 @@
 import React, { useState } from "react";
-import { useCampaigns } from "../../hooks/useCampaigns.js";
+import { useApi } from "../../api/apiClient.js";
 
-/**
- * ProjectApprovalPanel
- *
- * Režimy:
- * - TEĎ (mock):  <ProjectApprovalPanel project={mockProject} />
- *   → jen mění lokální state, loguje do konzole a ukazuje hlášku
- *
- * - POZDĚJI (backend): <ProjectApprovalPanel projectId={id} apiBaseUrl="/api" />
- *   → zavolá API (PATCH /projects/:id/status) s { status: "Approved" | "Rejected" }
- */
 export default function ProjectApprovalPanel({
   project,
-  projectId,
-  apiBaseUrl = "/api",
+  onStatusChanged,
 }) {
-  const { updateCampaignStatus } = useCampaigns();
+  const api = useApi();
   const initialStatus = project?.status || "PendingApproval";
 
   const [status, setStatus] = useState(initialStatus);
@@ -26,11 +15,10 @@ export default function ProjectApprovalPanel({
 
   const isPending = status === "PendingApproval";
 
-  if (!project && !projectId) {
+  if (!project) {
     return (
       <p className="p-4 text-red-800">
-        Missing campaign data (neither <code>project</code> nor{" "}
-        <code>projectId</code> provided).
+        Missing campaign data.
       </p>
     );
   }
@@ -47,47 +35,40 @@ export default function ProjectApprovalPanel({
     setSuccess("");
     setError("");
 
-    const id = project?._id ?? projectId;
-    const payload = { projectId: id, status: newStatus };
+    const id = project?._id || project?.id;
 
-    // MOCK režim – zatím nemáme backend, ale používáme context
-    if (!projectId) {
-      console.log("PROJECT APPROVAL (using context):", payload);
-
-      // Update campaign status in context
-      updateCampaignStatus(id, newStatus);
-
-      setStatus(newStatus);
-      setSuccess(
-        newStatus === "Approved"
-          ? "Campaign was approved successfully."
-          : "Campaign was rejected.",
-      );
-      setWorking(false);
-      return;
-    }
-
-    // BACKEND režim – až bude API připravené
     try {
-      const res = await fetch(`${apiBaseUrl}/projects/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            ...project,
-            status: newStatus
-        }),
+      const updateData = {
+        name: project.title,
+        description: project.description,
+        goalAmount: project.fundingGoal || 0,
+        currentAmount: project.currentAmount || 0,
+        deadLine: project.deadLine || new Date(),
+        status: newStatus,
+      };
+
+      if (project.categoryId) {
+        updateData.categoryId = project.categoryId;
+      }
+
+      await api(`/projects/${id}`, {
+        method: "POST",
+        body: updateData,
       });
 
-      if (!res.ok) throw new Error("Failed to change campaign status.");
-
       setStatus(newStatus);
       setSuccess(
         newStatus === "Approved"
           ? "Campaign was approved successfully."
           : "Campaign was rejected.",
       );
-    } catch (e) {
-      setError(e?.message || "Error changing campaign status.");
+
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
+    } catch (err) {
+      console.error("Error changing campaign status:", err);
+      setError(err.message || "Failed to change campaign status.");
     } finally {
       setWorking(false);
     }
