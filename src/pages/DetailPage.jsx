@@ -84,7 +84,7 @@ export default function DetailPage() {
 
             <DetailPageHeader
                 name={detailData?.name}
-                category={detailData?.categoryName}
+                category={detailData?.categoryName ?? "Category not found"}
             />
 
             <AboutPanel content={detailData?.description} />
