@@ -40,7 +40,7 @@ export function useApi() {
       headers,
       credentials: "include",
     });
-
+    console.log(response)
     if (!response.ok) {
       let errorMessage = `API ${response.status}: `;
       try {
