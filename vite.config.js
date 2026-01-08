@@ -12,7 +12,6 @@ export default defineConfig({
         target: hostUrl,
         changeOrigin: true,
       },
-      
       "/users": {
         target: hostUrl,
         changeOrigin: true,
