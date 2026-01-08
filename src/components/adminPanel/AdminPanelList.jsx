@@ -213,19 +213,36 @@ export default function AdminPanelList() {
     setEditingCategory(null);
   };
 
-  const handleSaveCategory = (updatedCategory) => {
-    setCategories((prev) =>
-      prev.map((category) =>
-        (category._id || category.id) === (updatedCategory._id || updatedCategory.id)
-          ? updatedCategory
-          : category,
-      ),
-    );
-  };
+  const handleSaveCategory = async (updatedCategory) => {
+  const categoryId = updatedCategory?.id || updatedCategory?._id;
 
-  const filteredCampaigns = useMemo(() => {
-    return campaigns.filter((campaign) => campaign.status === campaignSubTab);
-  }, [campaigns, campaignSubTab]);
+  if (!categoryId) {
+    setError("Category ID not found");
+    return;
+  }
+
+  try {
+    setIsAdding(true);
+    setError("");
+
+    await api(`/categories/${categoryId}`, {
+      method: "POST",
+      body: JSON.stringify({
+        name: updatedCategory.name,
+      }),
+    });
+
+    const data = await api("/categories");
+    setCategories(data || []);
+    setIsModalOpen(false);
+    setEditingCategory(null);
+  } catch (err) {
+    console.error("Error updating category:", err);
+    setError(err.message || "Failed to update category");
+  } finally {
+    setIsAdding(false);
+  }
+};
 
   return (
     <>
