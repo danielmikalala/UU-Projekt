@@ -221,15 +221,38 @@ export default function AdminPanelList() {
     setEditingCategory(null);
   };
 
-  const handleSaveCategory = (updatedCategory) => {
-    setCategories((prev) =>
-      prev.map((category) =>
-        (category._id || category.id) ===
-        (updatedCategory._id || updatedCategory.id)
-          ? updatedCategory
-          : category,
-      ),
-    );
+  const handleSaveCategory = async (updatedCategory) => {
+    const categoryId = updatedCategory._id || updatedCategory.id;
+    
+    if (!categoryId) {
+      setError("Category ID not found");
+      return;
+    }
+
+    try {
+      setIsAdding(true);
+      setError("");
+      
+      // Make API call to update category on backend
+      await api(`/categories/${categoryId}`, {
+        method: "POST",
+        body: {
+          name: updatedCategory.name.trim(),
+        },
+      });
+
+      // Fetch updated categories from backend to ensure consistency
+      const updatedCategories = await api("/categories", { method: "GET" });
+      setCategories(updatedCategories || []);
+      
+      setIsModalOpen(false);
+      setEditingCategory(null);
+    } catch (err) {
+      console.error("Error updating category:", err);
+      setError(err.message || "Failed to update category");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const filteredCampaigns = useMemo(() => {
