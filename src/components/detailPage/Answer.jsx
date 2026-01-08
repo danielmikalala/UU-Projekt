@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 export default function Answer({ content, author, date }) {
   return (
@@ -7,5 +7,5 @@ export default function Answer({ content, author, date }) {
       <p className="text-sm text-gray-500">{date.split("T")[0]}</p>
       <p className="mt-1">{content}</p>
     </div>
-  )
+  );
 }

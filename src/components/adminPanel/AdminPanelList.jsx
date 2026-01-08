@@ -28,6 +28,7 @@ export default function AdminPanelList() {
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [updatingUserId, setUpdatingUserId] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -168,6 +169,10 @@ export default function AdminPanelList() {
   };
 
   const handleToggleRole = async (user, newRole) => {
+    if (user.role === newRole) {
+      return;
+    }
+
     const userId = user._id || user.id;
     if (!userId) {
       setError("User ID not found");
@@ -175,9 +180,10 @@ export default function AdminPanelList() {
     }
 
     try {
+      setUpdatingUserId(userId);
       setError("");
-      await api(`/users/${userId}`, {
-        method: "PATCH",
+      await api(`/users/update-role/${userId}`, {
+        method: "PUT",
         body: { role: newRole },
       });
 
@@ -186,6 +192,8 @@ export default function AdminPanelList() {
     } catch (err) {
       console.error("Error updating user role:", err);
       setError(err.message || "Failed to update user role");
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -216,7 +224,8 @@ export default function AdminPanelList() {
   const handleSaveCategory = (updatedCategory) => {
     setCategories((prev) =>
       prev.map((category) =>
-        (category._id || category.id) === (updatedCategory._id || updatedCategory.id)
+        (category._id || category.id) ===
+        (updatedCategory._id || updatedCategory.id)
           ? updatedCategory
           : category,
       ),
@@ -288,39 +297,43 @@ export default function AdminPanelList() {
 
           <div className="space-y-4">
             {isLoading ? (
-              <div className="text-center text-gray-500 py-4">Loading categories...</div>
+              <div className="text-center text-gray-500 py-4">
+                Loading categories...
+              </div>
             ) : categories.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">No categories yet. Create one above!</div>
+              <div className="text-center text-gray-500 py-4">
+                No categories yet. Create one above!
+              </div>
             ) : (
               categories.map((category) => (
                 <div
                   key={category._id || category.id}
                   className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
                 >
-                <div>
-                  <p className="text-base font-semibold text-gray-900">
-                    {category.name}
-                  </p>
+                  <div>
+                    <p className="text-base font-semibold text-gray-900">
+                      {category.name}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditCategory(category)}
+                      aria-label={`Edit ${category.name}`}
+                      className="inline-flex items-center gap-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+                    >
+                      <Pencil className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(category)}
+                      aria-label={`Delete ${category.name}`}
+                      className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditCategory(category)}
-                    aria-label={`Edit ${category.name}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
-                  >
-                    <Pencil className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCategory(category)}
-                    aria-label={`Delete ${category.name}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
               ))
             )}
           </div>
@@ -334,8 +347,8 @@ export default function AdminPanelList() {
               Campaign Management
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              Review and approve submitted campaigns. Campaigns with
-              "Pending" status can be approved or rejected.
+              Review and approve submitted campaigns. Campaigns with "Pending"
+              status can be approved or rejected.
             </p>
 
             <div className="flex gap-2 mb-6">
@@ -390,10 +403,16 @@ export default function AdminPanelList() {
             )}
 
             {isLoadingCampaigns ? (
-              <div className="text-center text-gray-500 py-4">Loading campaigns...</div>
+              <div className="text-center text-gray-500 py-4">
+                Loading campaigns...
+              </div>
             ) : filteredCampaigns.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
-                No {campaignSubTab === "PendingApproval" ? "pending" : campaignSubTab.toLowerCase()} campaigns.
+                No{" "}
+                {campaignSubTab === "PendingApproval"
+                  ? "pending"
+                  : campaignSubTab.toLowerCase()}{" "}
+                campaigns.
               </div>
             ) : (
               <div className="space-y-4">
@@ -439,59 +458,89 @@ export default function AdminPanelList() {
 
             <div className="space-y-4">
               {isLoadingUsers ? (
-                <div className="text-center text-gray-500 py-4">Loading users...</div>
+                <div className="text-center text-gray-500 py-4">
+                  Loading users...
+                </div>
               ) : users.length === 0 ? (
-                <div className="text-center text-gray-500 py-4">No users found.</div>
+                <div className="text-center text-gray-500 py-4">
+                  No users found.
+                </div>
               ) : (
-                users.map((user) => (
-                  <div
-                    key={user._id || user.id}
-                    className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
-                  >
-                    <div>
-                      <p className="text-base font-semibold text-gray-900">
-                        {user.name || user.email}
-                      </p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-700 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                          </svg>
-                          Admin
-                        </span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={user.role === "ADMIN"}
-                            onChange={() => handleToggleRole(user, "ADMIN")}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                        </label>
+                users.map((user) => {
+                  const userId = user._id || user.id;
+                  const isUpdating = updatingUserId === userId;
+                  return (
+                    <div
+                      key={userId}
+                      className={`flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm ${isUpdating ? "opacity-60" : ""}`}
+                    >
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">
+                          {user.name || user.email}
+                        </p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-700 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          User
-                        </span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={user.role === "USER"}
-                            onChange={() => handleToggleRole(user, "USER")}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-400"></div>
-                        </label>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-700 flex items-center gap-1">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                              />
+                            </svg>
+                            Admin
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={user.role === "ADMIN"}
+                              onChange={() => handleToggleRole(user, "ADMIN")}
+                              disabled={isUpdating}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-disabled:cursor-not-allowed"></div>
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-700 flex items-center gap-1">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                            User
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={user.role === "USER"}
+                              onChange={() => handleToggleRole(user, "USER")}
+                              disabled={isUpdating}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-400 peer-disabled:cursor-not-allowed"></div>
+                          </label>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

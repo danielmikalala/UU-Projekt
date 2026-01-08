@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { useApi } from "../../api/apiClient.js";
 
-export default function ProjectApprovalPanel({
-  project,
-  onStatusChanged,
-}) {
+export default function ProjectApprovalPanel({ project, onStatusChanged }) {
   const api = useApi();
   const initialStatus = project?.status || "PendingApproval";
 
@@ -16,11 +13,7 @@ export default function ProjectApprovalPanel({
   const isPending = status === "PendingApproval";
 
   if (!project) {
-    return (
-      <p className="p-4 text-red-800">
-        Missing campaign data.
-      </p>
-    );
+    return <p className="p-4 text-red-800">Missing campaign data.</p>;
   }
 
   async function handleChangeStatus(newStatus) {
