@@ -12,6 +12,7 @@ export default function AuthForm() {
     password: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const [registerError, setRegisterError] = useState("");
 
   const { login, register } = useAuth();
@@ -28,12 +29,14 @@ export default function AuthForm() {
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
+    setLoginError("");
     setIsSubmitting(true);
     try {
       await login(loginForm);
       navigate("/home");
     } catch (error) {
       console.error("Login error", error);
+      setLoginError("Email or password is incorrect.");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,6 +94,12 @@ export default function AuthForm() {
 
         {isLogin ? (
           <form className="mt-6 space-y-4" onSubmit={handleLoginSubmit}>
+            {loginError && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded">
+                {loginError}
+              </div>
+            )}
+
             <div className="space-y-1 text-left">
               <label className="text-sm font-medium text-gray-700">Email</label>
               <input

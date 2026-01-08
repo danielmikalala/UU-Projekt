@@ -6,6 +6,8 @@ import CampaignRemoveBtn from "../components/buttons/CampaignRemoveBtn.jsx";
 import CreateCampaignUpdatePostForm from "../components/forms/CreateCampaignUpdatePostForm.jsx";
 import ProjectUpdateForm from "../components/adminPanel/ProjectUpdateForm.jsx";
 import QuestionsPanel from "../components/managedCampains/QuestionsPanel.jsx";
+import PostLog from "../components/detailPage/PostLog.jsx";
+
 
 const TABS = [
   { id: "edit", label: "Edit details" },
@@ -20,6 +22,8 @@ export default function CampaignAdminPanelPage() {
   const [project, setProject] = useState(null);
   const [loadingProject, setLoadingProject] = useState(false);
   const [projectError, setProjectError] = useState("");
+
+  const [postsReloadKey, setPostsReloadKey] = useState(0);
 
   useEffect(() => {
     if (activeTab !== "edit") return;
@@ -126,10 +130,15 @@ export default function CampaignAdminPanelPage() {
       )}
 
       {activeTab === "update" && (
-        <section className="mt-8 space-y-6">
-          <CreateCampaignUpdatePostForm id={id} />
-        </section>
-      )}
+            <section className="mt-8 space-y-6">
+              <CreateCampaignUpdatePostForm
+                  id={id}
+                  onSuccess={() => setPostsReloadKey((k) => k + 1)}
+              />
+
+              <PostLog id={id} reloadKey={postsReloadKey} />
+            </section>
+        )}
 
       {activeTab === "qa" && (
         <section className="mt-8 space-y-6">

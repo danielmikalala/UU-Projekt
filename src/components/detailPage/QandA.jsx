@@ -11,8 +11,13 @@ export default function QandA({ id }) {
   const [comment, setComment] = useState("");
 
   const fetchAndBuild = async () => {
-    const res = await api(`/projects/${id}/comments`, { method: "GET" });
-    const payload = Array.isArray(res) ? res : res?.payload ?? [];
+    const res = await api(`/projects/${id}/comments`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const payload = Array.isArray(res) ? res : (res?.payload ?? []);
     const list = (Array.isArray(payload) ? payload : []).filter(Boolean);
 
     const map = Object.create(null);
@@ -26,7 +31,7 @@ export default function QandA({ id }) {
       if (pid && map[String(pid)]) map[String(pid)].answers.push(it);
     });
     const roots = Object.values(map).filter(
-      (it) => !it.parentCommentId || !map[String(it.parentCommentId)]
+      (it) => !it.parentCommentId || !map[String(it.parentCommentId)],
     );
     setItems(roots);
   };
@@ -56,8 +61,8 @@ export default function QandA({ id }) {
           prev.map((q) =>
             String(q._id ?? q.id) === String(created.parentCommentId)
               ? { ...q, answers: [...(q.answers || []), created] }
-              : q
-          )
+              : q,
+          ),
         );
       } else {
         setItems((prev) => [...prev, { ...created, answers: [] }]);
@@ -78,7 +83,9 @@ export default function QandA({ id }) {
           placeholder="Ask a question..."
           className="w-full border rounded-lg p-3 h-20"
           value={comment}
-          onChange={(e) => setComment(e.target.value.slice(0, MAX_QUESTION_LENGTH))}
+          onChange={(e) =>
+            setComment(e.target.value.slice(0, MAX_QUESTION_LENGTH))
+          }
           maxLength={MAX_QUESTION_LENGTH}
         />
         <div className="flex items-center justify-between mt-2">

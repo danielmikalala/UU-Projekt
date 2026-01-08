@@ -1,90 +1,110 @@
-import React, { useState } from "react";
-import { useCampaigns } from "../../hooks/useCampaigns.js";
+import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { useApi } from "../../api/apiClient.js";
 
-/**
- * ProjectApprovalPanel
- *
- * Režimy:
- * - TEĎ (mock):  <ProjectApprovalPanel project={mockProject} />
- *   → jen mění lokální state, loguje do konzole a ukazuje hlášku
- *
- * - POZDĚJI (backend): <ProjectApprovalPanel projectId={id} apiBaseUrl="/api" />
- *   → zavolá API (PATCH /projects/:id/status) s { status: "Approved" | "Rejected" }
- */
-export default function ProjectApprovalPanel({
-  project,
-  projectId,
-  apiBaseUrl = "/api",
-}) {
-  const { updateCampaignStatus } = useCampaigns();
+export default function ProjectApprovalPanel({ project, onStatusChanged }) {
+  const api = useApi();
   const initialStatus = project?.status || "PendingApproval";
 
   const [status, setStatus] = useState(initialStatus);
   const [working, setWorking] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
+
+  useEffect(() => {
+    if (project?.status) {
+      setStatus(project.status);
+      setSuccess("");
+      setError("");
+    }
+  }, [project?.status]);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && isModalOpen) {
+        setIsModalOpen(false);
+        setPendingStatus(null);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
+    };
+  }, [isModalOpen]);
 
   const isPending = status === "PendingApproval";
 
-  if (!project && !projectId) {
-    return (
-      <p className="p-4 text-red-800">
-        Missing campaign data (neither <code>project</code> nor{" "}
-        <code>projectId</code> provided).
-      </p>
-    );
+  if (!project) {
+    return <p className="p-4 text-red-800">Missing campaign data.</p>;
   }
 
-  async function handleChangeStatus(newStatus) {
-    const confirmText =
-      newStatus === "Approved"
-        ? "Are you sure you want to approve this campaign?"
-        : "Are you sure you want to reject this campaign?";
+  const handleButtonClick = (newStatus) => {
+    setPendingStatus(newStatus);
+    setIsModalOpen(true);
+  };
 
-    if (!window.confirm(confirmText)) return;
+  const handleModalConfirm = () => {
+    setIsModalOpen(false);
+    handleChangeStatus(pendingStatus);
+  };
+
+  const handleModalCancel = () => {
+    setIsModalOpen(false);
+    setPendingStatus(null);
+  };
+
+  async function handleChangeStatus(newStatus) {
 
     setWorking(true);
     setSuccess("");
     setError("");
 
-    const id = project?._id ?? projectId;
-    const payload = { projectId: id, status: newStatus };
+    const id = project?._id || project?.id;
 
-    // MOCK režim – zatím nemáme backend, ale používáme context
-    if (!projectId) {
-      console.log("PROJECT APPROVAL (using context):", payload);
-
-      // Update campaign status in context
-      updateCampaignStatus(id, newStatus);
-
-      setStatus(newStatus);
-      setSuccess(
-        newStatus === "Approved"
-          ? "Campaign was approved successfully."
-          : "Campaign was rejected.",
-      );
-      setWorking(false);
-      return;
-    }
-
-    // BACKEND režim – až bude API připravené
     try {
-      const res = await fetch(`${apiBaseUrl}/projects/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+      const updateData = {
+        name: project.title,
+        description: project.description,
+        goalAmount: project.fundingGoal || 0,
+        currentAmount: project.currentAmount || 0,
+        deadLine: project.deadLine || new Date(),
+        status: newStatus,
+      };
+
+      if (project.categoryId) {
+        updateData.categoryId = project.categoryId;
+      }
+
+      await api(`/projects/${id}`, {
+        method: "POST",
+        body: updateData,
       });
 
-      if (!res.ok) throw new Error("Failed to change campaign status.");
-
       setStatus(newStatus);
-      setSuccess(
-        newStatus === "Approved"
-          ? "Campaign was approved successfully."
-          : "Campaign was rejected.",
-      );
-    } catch (e) {
-      setError(e?.message || "Error changing campaign status.");
+      let successMessage = "";
+      if (newStatus === "Approved") {
+        successMessage = "Campaign was approved successfully.";
+      } else if (newStatus === "Rejected") {
+        successMessage = "Campaign was rejected.";
+      } else if (newStatus === "PendingApproval") {
+        successMessage = "Campaign returned to pending.";
+      }
+      setSuccess(successMessage);
+
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
+    } catch (err) {
+      console.error("Error changing campaign status:", err);
+      setError(err.message || "Failed to change campaign status.");
     } finally {
       setWorking(false);
     }
@@ -123,7 +143,9 @@ export default function ProjectApprovalPanel({
             className={`p-2 rounded text-xs whitespace-nowrap ${
               status === "Rejected"
                 ? "bg-red-100 text-red-800 border border-red-200"
-                : "bg-green-100 text-green-800 border border-green-200"
+                : status === "PendingApproval"
+                  ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                  : "bg-green-100 text-green-800 border border-green-200"
             }`}
           >
             {success}
@@ -132,37 +154,100 @@ export default function ProjectApprovalPanel({
           <div className="p-2 rounded bg-red-100 text-red-800 border border-red-200 text-xs whitespace-nowrap">
             {error}
           </div>
-        ) : (
+        ) : isPending ? (
           <>
             <button
               type="button"
-              disabled={!isPending || working}
-              onClick={() => handleChangeStatus("Approved")}
-              className={`px-3 py-1.5 rounded text-xs font-semibold text-white ${
-                !isPending || working
+              disabled={working}
+              onClick={() => handleButtonClick("Approved")}
+              className={`w-full px-3 py-1.5 rounded text-xs font-semibold text-white ${
+                working
                   ? "bg-gray-400 cursor-default"
                   : "bg-purple-600 hover:bg-purple-700 cursor-pointer"
               }`}
             >
               Approve
             </button>
-            {isPending && (
-              <button
-                type="button"
-                disabled={working}
-                onClick={() => handleChangeStatus("Rejected")}
-                className={`px-3 py-1.5 rounded text-xs font-semibold text-white ${
-                  working
-                    ? "bg-gray-400 cursor-default"
-                    : "bg-red-600 hover:bg-red-700 cursor-pointer"
-                }`}
-              >
-                Reject
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={working}
+              onClick={() => handleButtonClick("Rejected")}
+              className={`w-full px-3 py-1.5 rounded text-xs font-semibold text-white ${
+                working
+                  ? "bg-gray-400 cursor-default"
+                  : "bg-red-600 hover:bg-red-700 cursor-pointer"
+              }`}
+            >
+              Reject
+            </button>
           </>
+        ) : (
+          <button
+            type="button"
+            disabled={working}
+            onClick={() => handleButtonClick("PendingApproval")}
+            className={`w-full px-3 py-1.5 rounded text-xs font-semibold text-white ${
+              working
+                ? "bg-gray-400 cursor-default"
+                : "bg-gray-600 hover:bg-gray-700 cursor-pointer"
+            }`}
+          >
+            Set to pending
+          </button>
         )}
       </div>
+
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={handleModalCancel}
+        >
+          <div
+            className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleModalCancel}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+              aria-label="Close modal"
+            >
+              <X className="h-5 w-5" strokeWidth={2} />
+            </button>
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              Confirm Action
+            </h2>
+            <p className="mb-6 text-gray-700">
+              {pendingStatus === "Approved"
+                ? "Are you sure you want to approve this campaign?"
+                : pendingStatus === "Rejected"
+                  ? "Are you sure you want to reject this campaign?"
+                  : "Are you sure you want to return this campaign to pending?"}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleModalCancel}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleModalConfirm}
+                className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors ${
+                  pendingStatus === "Rejected"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : pendingStatus === "Approved"
+                      ? "bg-purple-600 hover:bg-purple-700"
+                      : "bg-gray-600 hover:bg-gray-700"
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

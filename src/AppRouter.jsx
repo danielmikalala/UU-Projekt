@@ -9,6 +9,8 @@ import ManagedCampaignsPage from "./pages/ManagedCampaignsPage.jsx";
 import CreateCampaignPage from "./pages/CreateCampaignPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
+import EditProjectPage from "./pages/EditProjectPage.jsx";
+
 
 export default function AppRouter() {
   return (
@@ -16,8 +18,13 @@ export default function AppRouter() {
       <Navigation />
       <div>
         <Routes>
+          {/* default redirect */}
           <Route path="/" element={<Navigate to="/home" replace />} />
+
+          {/* auth page */}
           <Route path="/auth" element={<AuthPage />} />
+
+          {/* protected routes */}
           <Route
             path="/home"
             element={
@@ -26,14 +33,17 @@ export default function AppRouter() {
               </RequireAuth>
             }
           />
-          <Route
-            path="/admin"
-            element={
-              <RequireAuth>
-                <AdminPage />
-              </RequireAuth>
-            }
-          />
+
+
+                    <Route
+                        path="/admin"
+                        element={
+                            <RequireAuth>
+                                <AdminPage />
+                            </RequireAuth>
+                        }
+                    />
+
           <Route
             path="/managed"
             element={
@@ -42,6 +52,7 @@ export default function AppRouter() {
               </RequireAuth>
             }
           />
+
           <Route
             path="/create"
             element={
@@ -50,6 +61,7 @@ export default function AppRouter() {
               </RequireAuth>
             }
           />
+
           <Route
             path="/campaign-admin/:id"
             element={
@@ -58,6 +70,7 @@ export default function AppRouter() {
               </RequireAuth>
             }
           />
+
           <Route
             path="/detail/:id"
             element={
@@ -66,6 +79,18 @@ export default function AppRouter() {
               </RequireAuth>
             }
           />
+
+          {/* ✅ TADY je nová edit route */}
+          <Route
+            path="/edit/:id"
+            element={
+              <RequireAuth>
+                <EditProjectPage />
+              </RequireAuth>
+            }
+          />
+
+          {/* fallback */}
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </div>

@@ -13,7 +13,7 @@ export default function QuestionsPanel({ id }) {
     if (fetchedRef.current) return campaignData;
     fetchedRef.current = true;
     const res = await api(`/projects/${id}/comments`, { method: "GET" });
-    const payload = Array.isArray(res) ? res : res?.payload ?? [];
+    const payload = Array.isArray(res) ? res : (res?.payload ?? []);
     const list = Array.isArray(payload) ? payload.filter(Boolean) : [];
 
     // nest answers under their parentCommentId so answers persist across navigation
@@ -35,7 +35,8 @@ export default function QuestionsPanel({ id }) {
     // roots = items without a parent or whose parent is missing
     const roots = [];
     byId.forEach((item) => {
-      if (!item.parentCommentId || !byId.has(item.parentCommentId)) roots.push(item);
+      if (!item.parentCommentId || !byId.has(item.parentCommentId))
+        roots.push(item);
     });
 
     return roots;
@@ -68,11 +69,13 @@ export default function QuestionsPanel({ id }) {
       setCampaignData((prev) =>
         prev.map((q) => {
           if ((q._id ?? q.id) === qid) {
-            const answers = Array.isArray(q.answers) ? [...q.answers, created] : [created];
+            const answers = Array.isArray(q.answers)
+              ? [...q.answers, created]
+              : [created];
             return { ...q, answers };
           }
           return q;
-        })
+        }),
       );
 
       console.log("Posted answer:", result);
@@ -92,11 +95,13 @@ export default function QuestionsPanel({ id }) {
       setCampaignData((prev) =>
         prev.map((q) => {
           if ((q._id ?? q.id) === qid) {
-            const answers = Array.isArray(q.answers) ? [...q.answers, local] : [local];
+            const answers = Array.isArray(q.answers)
+              ? [...q.answers, local]
+              : [local];
             return { ...q, answers };
           }
           return q;
-        })
+        }),
       );
     }
   };
@@ -128,12 +133,18 @@ export default function QuestionsPanel({ id }) {
                     ))}
                 </div>
 
-                <form onSubmit={(e) => handleAnswerSubmit(e, qid)} className="mt-3">
+                <form
+                  onSubmit={(e) => handleAnswerSubmit(e, qid)}
+                  className="mt-3"
+                >
                   <textarea
                     className="w-full border rounded-lg p-3 h-24"
                     value={answersDrafts[qid] || ""}
                     onChange={(e) =>
-                      setAnswersDrafts((prev) => ({ ...prev, [qid]: e.target.value }))
+                      setAnswersDrafts((prev) => ({
+                        ...prev,
+                        [qid]: e.target.value,
+                      }))
                     }
                     placeholder="Write your answer here"
                   />
@@ -146,7 +157,9 @@ export default function QuestionsPanel({ id }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAnswersDrafts((prev) => ({ ...prev, [qid]: "" }))}
+                      onClick={() =>
+                        setAnswersDrafts((prev) => ({ ...prev, [qid]: "" }))
+                      }
                       className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg"
                     >
                       Cancel
