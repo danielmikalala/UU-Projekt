@@ -153,32 +153,35 @@ export default function AdminPanelList() {
   };
 
   const handleSaveCategory = async (updatedCategory) => {
-    if (!updatedCategory?._id) {
-      setError("Category ID not found");
-      return;
-    }
+  const categoryId = updatedCategory?.id || updatedCategory?._id;
 
-    try {
-      setIsAdding(true);
-      setError("");
+  if (!categoryId) {
+    setError("Category ID not found");
+    return;
+  }
 
-      await api(`/categories/${updatedCategory._id}`, {
-        method: "POST",
-        body: { name: updatedCategory.name },
-      });
+  try {
+    setIsAdding(true);
+    setError("");
 
-      const data = await api("/categories");
-      setCategories(data || []);
-      setIsModalOpen(false);
-      setEditingCategory(null);
-    } catch (err) {
-      console.error("Error updating category:", err);
-      setError(err.message || "Failed to update category");
-    } finally {
-      setIsAdding(false);
-    }
-  };
+    await api(`/categories/${categoryId}`, {
+      method: "POST",
+      body: JSON.stringify({
+        name: updatedCategory.name,
+      }),
+    });
 
+    const data = await api("/categories");
+    setCategories(data || []);
+    setIsModalOpen(false);
+    setEditingCategory(null);
+  } catch (err) {
+    console.error("Error updating category:", err);
+    setError(err.message || "Failed to update category");
+  } finally {
+    setIsAdding(false);
+  }
+};
 
   return (
     <>
