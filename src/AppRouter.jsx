@@ -12,86 +12,86 @@ import RequireAuth from "./components/RequireAuth.jsx";
 import EditProjectPage from "./pages/EditProjectPage.jsx";
 
 export default function AppRouter() {
-    return (
-        <BrowserRouter>
-            <Navigation />
-            <div>
-                <Routes>
-                    {/* default redirect */}
-                    <Route path="/" element={<Navigate to="/home" replace />} />
+  return (
+    <BrowserRouter>
+      <Navigation />
+      <div>
+        <Routes>
+          {/* default redirect */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
 
-                    {/* auth page */}
-                    <Route path="/auth" element={<AuthPage />} />
+          {/* auth page */}
+          <Route path="/auth" element={<AuthPage />} />
 
-                    {/* protected routes */}
-                    <Route
-                        path="/home"
-                        element={
-                            <RequireAuth>
-                                <HomePage />
-                            </RequireAuth>
-                        }
-                    />
+          {/* protected routes */}
+          <Route
+            path="/home"
+            element={
+              <RequireAuth>
+                <HomePage />
+              </RequireAuth>
+            }
+          />
 
-                    <Route
-                        path="/admin"
-                        element={
-                            <RequireAuth>
-                                <AdminPage />
-                            </RequireAuth>
-                        }
-                    />
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <AdminPage />
+              </RequireAuth>
+            }
+          />
 
-                    <Route
-                        path="/managed"
-                        element={
-                            <RequireAuth>
-                                <ManagedCampaignsPage />
-                            </RequireAuth>
-                        }
-                    />
+          <Route
+            path="/managed"
+            element={
+              <RequireAuth>
+                <ManagedCampaignsPage />
+              </RequireAuth>
+            }
+          />
 
-                    <Route
-                        path="/create"
-                        element={
-                            <RequireAuth>
-                                <CreateCampaignPage />
-                            </RequireAuth>
-                        }
-                    />
+          <Route
+            path="/create"
+            element={
+              <RequireAuth>
+                <CreateCampaignPage />
+              </RequireAuth>
+            }
+          />
 
-                    <Route
-                        path="/campaign-admin/:id"
-                        element={
-                            <RequireAuth>
-                                <CampaignAdminPanelPage />
-                            </RequireAuth>
-                        }
-                    />
+          <Route
+            path="/campaign-admin/:id"
+            element={
+              <RequireAuth>
+                <CampaignAdminPanelPage />
+              </RequireAuth>
+            }
+          />
 
-                    <Route
-                        path="/detail/:id"
-                        element={
-                            <RequireAuth>
-                                <DetailPage />
-                            </RequireAuth>
-                        }
-                    />
+          <Route
+            path="/detail/:id"
+            element={
+              <RequireAuth>
+                <DetailPage />
+              </RequireAuth>
+            }
+          />
 
-                    {/* ✅ TADY je nová edit route */}
-                    <Route
-                        path="/edit/:id"
-                        element={
-                            <RequireAuth>
-                                <EditProjectPage />
-                            </RequireAuth>
-                        }
-                    />
+          {/* ✅ TADY je nová edit route */}
+          <Route
+            path="/edit/:id"
+            element={
+              <RequireAuth>
+                <EditProjectPage />
+              </RequireAuth>
+            }
+          />
 
-                    {/* fallback */}
-                    <Route path="*" element={<Navigate to="/auth" replace />} />
-                </Routes>
-            </div>
-        </BrowserRouter>
-    );
+          {/* fallback */}
+          <Route path="*" element={<Navigate to="/auth" replace />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
 }

@@ -31,7 +31,7 @@ export default function QandA({ id }) {
       if (pid && map[String(pid)]) map[String(pid)].answers.push(it);
     });
     const roots = Object.values(map).filter(
-      (it) => !it.parentCommentId || !map[String(it.parentCommentId)]
+      (it) => !it.parentCommentId || !map[String(it.parentCommentId)],
     );
     setItems(roots);
   };
@@ -61,8 +61,8 @@ export default function QandA({ id }) {
           prev.map((q) =>
             String(q._id ?? q.id) === String(created.parentCommentId)
               ? { ...q, answers: [...(q.answers || []), created] }
-              : q
-          )
+              : q,
+          ),
         );
       } else {
         setItems((prev) => [...prev, { ...created, answers: [] }]);
