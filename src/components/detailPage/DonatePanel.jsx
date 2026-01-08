@@ -56,7 +56,7 @@ export default function DonatePanel({ goal, currentState, projectId, token, onDo
                     min="1"
                     step="1"
                     className="flex-1 border rounded-lg p-2"
-                    placeholder="Amount (CZK)"
+                    placeholder="Amount (USD)"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     disabled={loading}
