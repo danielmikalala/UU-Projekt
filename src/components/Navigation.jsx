@@ -1,64 +1,82 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import {Link, useNavigate, useLocation} from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import {
-  GearIcon,
-  CollectionIcon,
-  PlusIcon,
-  LogoutIcon,
+    PlusIcon,
 } from "./buttons/icons";
-import { useAuth } from "../context/AuthContext.jsx";
+import { TbLogout2, TbSettings, TbBook } from "react-icons/tb";
+import {useAuth} from "../context/AuthContext.jsx";
 
 export default function Navigation() {
-  const { isAuthenticated, user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+    const {isAuthenticated, user, logout} = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  if (location.pathname.startsWith("/auth")) return null;
-  if (!isAuthenticated) return null;
+    if (location.pathname.startsWith("/auth")) return null;
+    if (!isAuthenticated) return null;
 
-  const handleLogout = () => {
-    logout();
-    navigate("/auth", { replace: true });
-  };
+    const handleLogout = () => {
+        logout();
+        navigate("/auth", {replace: true});
+    };
 
-  const handleCreateCampaign = () => {
-    navigate("/create");
-  };
+    const handleCreateCampaign = () => {
+        navigate("/create");
+    };
 
-  return (
-    <nav className="top-0 left-0 right-0 w-full border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-auto items-center justify-between px-3 py-3">
-        <div className="text-xl font-extrabold">
-          <Link to="/" className="text-gray-900 no-underline">
-            CrowdFund
-          </Link>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500 mr-1">
-            {user?.name || user?.email || "User"}
-          </span>
-          {user?.role.toLowerCase() === "admin" && (
-            <Link to="/admin" className="no-underline">
-              <PrimaryButton icon={<GearIcon />}>Admin</PrimaryButton>
-            </Link>
-          )}
-          <Link to="/managed" className="no-underline">
-            <PrimaryButton icon={<CollectionIcon />}>
-              My Campaigns
-            </PrimaryButton>
-          </Link>
-          <PrimaryButton onClick={handleCreateCampaign} icon={<PlusIcon />}>
-            Create
-          </PrimaryButton>
-          <PrimaryButton
-            onClick={handleLogout}
-            aria-label="Logout"
-            icon={<LogoutIcon />}
-          >
-            Logout
-          </PrimaryButton>
-        </div>
-      </div>
-    </nav>
-  );
+    return (
+        <nav className="top-0 left-0 right-0 w-full border-b border-gray-200 bg-white">
+            <div className="mx-auto max-w-auto px-3 py-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="text-xl font-extrabold text-gray-900 flex justify-center items-center align-middle">
+                        <Link to="/">
+                            uuSTARTER
+                        </Link>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2 lg:flex-row lg:items-center lg:gap-3">
+                        <div className="flex items-center gap-3">
+                            <span className="mr-1 text-sm text-gray-500">
+                                {user?.name || user?.email || "User"}
+                            </span>
+                            <PrimaryButton
+                                onClick={handleLogout}
+                                aria-label="Logout"
+                                icon={<TbLogout2 className="h-4 w-4"/>}
+                            />
+                            {user?.role.toLowerCase() === "admin" && (
+                                <Link to="/admin" className="no-underline">
+                                    <PrimaryButton
+                                        icon={<TbSettings className="h-4 w-4"/>}
+                                        aria-label="Admin panel"
+                                    />
+                                </Link>
+                            )}
+                        </div>
+
+                        <div className="flex w-full items-center gap-3 lg:w-auto lg:justify-end">
+                            <Link
+                                to="/managed"
+                                className="no-underline flex-1 lg:flex-none"
+                            >
+                                <PrimaryButton
+                                    icon={<TbBook className="h-4 w-4"/>}
+                                    aria-label="My campaigns"
+                                    className="w-full lg:w-auto"
+                                >
+                                    Manage
+                                </PrimaryButton>
+                            </Link>
+                            <PrimaryButton
+                                onClick={handleCreateCampaign}
+                                icon={<PlusIcon/>}
+                                className="flex-1 w-full lg:w-auto lg:flex-none"
+                            >
+                                Create
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    );
 }

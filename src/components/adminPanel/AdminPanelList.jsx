@@ -1,23 +1,11 @@
-import React, { useMemo, useState } from "react";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Plus, Trash2, Pencil, Shield } from "lucide-react";
 import PrimaryButton from "../buttons/PrimaryButton.jsx";
 import AdminPanelModal from "./AdminPanelModal.jsx";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.jsx";
 import ProjectApprovalPanel from "./ProjectApprovalPanel.jsx";
 import { useCampaigns } from "../../hooks/useCampaigns.js";
-
-const fetchAdminPanelData = async () => {
-  if (fetchedRef.current) return [categories, campaigns, users];
-  fetchedRef.current = true;
-
-  const resCat = await api("/categories", { method: "GET" });
-  const resCam = await api("/projects", { method: "GET" });
-  const resUsers = await api("/users", { method: "GET" });
-
-  console.log("Fetched categories and campaigns:", resCat, resCam, resUsers);
-
-  return [await resCat, await resCam, await resUsers];
-};
+import { useApi } from "../../api/apiClient.js";
 
 const TABS = [
   { id: "campaigns", label: "Campaigns" },
@@ -25,15 +13,9 @@ const TABS = [
   { id: "users", label: "Users" },
 ];
 
-const INITIAL_CATEGORIES = [
-  { id: 1, name: "Technology", slug: "Innovate with technology" },
-  { id: 2, name: "Health", slug: "Support healthcare initiatives" },
-  { id: 3, name: "Education", slug: "Expand access to education" },
-  { id: 4, name: "Community", slug: "Build stronger communities" },
-  { id: 5, name: "Environment", slug: "Protect our environment" },
-];
-
 export default function AdminPanelList() {
+  const api = useApi();
+
   const [activeTab, setActiveTab] = useState("categories");
   const [categories, setCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -41,42 +23,90 @@ export default function AdminPanelList() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [error, setError] = useState("");
+  const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
   const { campaigns } = useCampaigns();
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        const data = await api("/categories");
+        setCategories(data || []);
+        setError("");
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError("Failed to load categories");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (activeTab !== "users") return;
+
+      try {
+        setIsLoadingUsers(true);
+        const usersData = await api("/users");
+        setUsers(usersData || []);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError("Failed to load users");
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, [activeTab]);
+
   const isAddDisabled = useMemo(
-    () => newCategoryName.trim().length === 0,
-    [newCategoryName]
+    () => newCategoryName.trim().length === 0 || isAdding,
+    [newCategoryName, isAdding],
   );
 
-  const handleAddCategory = (event) => {
+  const handleAddCategory = async (event) => {
     event.preventDefault();
     const trimmedName = newCategoryName.trim();
+    if (!trimmedName) return;
 
-    if (!trimmedName) {
-      return;
-    }
-
-    const slug = trimmedName
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-");
-
-    const alreadyExists = categories.some((category) => category.slug === slug);
+    const alreadyExists = categories.some(
+      (category) =>
+        (category.name || "").toLowerCase() === trimmedName.toLowerCase(),
+    );
 
     if (alreadyExists) {
+      setError("Category with this name already exists");
       setNewCategoryName("");
       return;
     }
 
-    setCategories((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: trimmedName,
-        slug,
-      },
-    ]);
-    setNewCategoryName("");
+    try {
+      setIsAdding(true);
+      setError("");
+
+      await api("/categories", {
+        method: "POST",
+        body: { name: trimmedName },
+      });
+
+      const data = await api("/categories");
+      setCategories(data || []);
+      setNewCategoryName("");
+    } catch (err) {
+      console.error("Error creating category:", err);
+      setError(err.message || "Failed to create category");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleDeleteCategory = (category) => {
@@ -84,11 +114,24 @@ export default function AdminPanelList() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (categoryToDelete) {
-      setCategories((prev) =>
-        prev.filter((category) => category.id !== categoryToDelete.id)
-      );
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete?._id) return;
+
+    try {
+      setIsAdding(true);
+      setError("");
+
+      await api(`/categories/${categoryToDelete._id}`, {
+        method: "DELETE",
+      });
+
+      const data = await api("/categories");
+      setCategories(data || []);
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      setError(err.message || "Failed to delete category");
+    } finally {
+      setIsAdding(false);
       setIsDeleteModalOpen(false);
       setCategoryToDelete(null);
     }
@@ -109,13 +152,33 @@ export default function AdminPanelList() {
     setEditingCategory(null);
   };
 
-  const handleSaveCategory = (updatedCategory) => {
-    setCategories((prev) =>
-      prev.map((category) =>
-        category.id === updatedCategory.id ? updatedCategory : category
-      )
-    );
+  const handleSaveCategory = async (updatedCategory) => {
+    if (!updatedCategory?._id) {
+      setError("Category ID not found");
+      return;
+    }
+
+    try {
+      setIsAdding(true);
+      setError("");
+
+      await api(`/categories/${updatedCategory._id}`, {
+        method: "POST",
+        body: { name: updatedCategory.name },
+      });
+
+      const data = await api("/categories");
+      setCategories(data || []);
+      setIsModalOpen(false);
+      setEditingCategory(null);
+    } catch (err) {
+      console.error("Error updating category:", err);
+      setError(err.message || "Failed to update category");
+    } finally {
+      setIsAdding(false);
+    }
   };
+
 
   return (
     <>
@@ -126,7 +189,10 @@ export default function AdminPanelList() {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setError("");
+              }}
               className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
                 isActive
                   ? "bg-gray-900 text-white shadow-sm"
@@ -152,52 +218,59 @@ export default function AdminPanelList() {
               <input
                 type="text"
                 value={newCategoryName}
-                onChange={(event) => setNewCategoryName(event.target.value)}
+                onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="Category name"
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
               />
               <PrimaryButton
                 type={isAddDisabled ? "button" : "submit"}
-                icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-                className={`${isAddDisabled ? "pointer-events-none opacity-60" : ""} !bg-purple-600 !border-purple-600 hover:!bg-purple-700`}
+                icon={<Plus className="h-4 w-4" />}
+                disabled={isAddDisabled}
               >
-                Add
+                {isAdding ? "Adding..." : "Add"}
               </PrimaryButton>
             </form>
           </div>
 
+          {error && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-4">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-5 py-4 shadow-sm"
-              >
-                <div>
-                  <p className="text-base font-semibold text-gray-900">
-                    {category.name}
-                  </p>
-                  <p className="text-sm text-gray-500">{category.slug}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditCategory(category)}
-                    aria-label={`Edit ${category.name}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
-                  >
-                    <Pencil className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCategory(category)}
-                    aria-label={`Delete ${category.name}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
+            {isLoading ? (
+              <div className="text-center text-gray-500 py-4">
+                Loading categories...
               </div>
-            ))}
+            ) : categories.length === 0 ? (
+              <div className="text-center text-gray-500 py-4">
+                No categories yet.
+              </div>
+            ) : (
+              categories.map((category) => (
+                <div
+                  key={category._id}
+                  className="flex items-center justify-between rounded-md border bg-white px-5 py-4 shadow-sm"
+                >
+                  <p className="font-semibold">{category.name}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditCategory(category)}
+                      className="rounded-md bg-blue-500 px-3 py-2 text-white"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCategory(category)}
+                      className="rounded-md bg-red-500 px-3 py-2 text-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       )}
@@ -208,11 +281,6 @@ export default function AdminPanelList() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Campaign Management
             </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Review and approve submitted campaigns. Campaigns with
-              "PendingApproval" status can be approved or rejected.
-            </p>
-
             {campaigns.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
                 No campaigns submitted yet.
@@ -240,8 +308,39 @@ export default function AdminPanelList() {
       )}
 
       {activeTab === "users" && (
-        <section className="mt-8 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-gray-500">
-          User management is coming soon.
+        <section className="mt-8 space-y-4">
+          {isLoadingUsers ? (
+            <div className="text-center text-gray-500">Loading users...</div>
+          ) : users.length === 0 ? (
+            <div className="text-center text-gray-500">No users found.</div>
+          ) : (
+            <div className="space-y-4">
+              {users.map((user) => {
+                const isAdmin = user.role === "Admin" || user.role === "admin";
+                return (
+                  <div
+                    key={user._id}
+                    className="flex items-center justify-between rounded-md border bg-white px-5 py-4 shadow-sm"
+                  >
+                    <div>
+                      <p className="font-semibold">
+                        {user.name || user.email}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Shield
+                        className={`h-4 w-4 ${
+                          isAdmin ? "text-purple-600" : "text-gray-400"
+                        }`}
+                      />
+                      <span>{isAdmin ? "Admin" : "User"}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 

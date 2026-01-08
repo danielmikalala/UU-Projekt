@@ -12,6 +12,7 @@ export default function AuthForm() {
     password: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const [registerError, setRegisterError] = useState("");
 
   const { login, register } = useAuth();
@@ -28,12 +29,14 @@ export default function AuthForm() {
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
+    setLoginError("");
     setIsSubmitting(true);
     try {
       await login(loginForm);
       navigate("/home");
     } catch (error) {
       console.error("Login error", error);
+      setLoginError("Email or password is incorrect.");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,7 +83,9 @@ export default function AuthForm() {
             type="button"
             onClick={() => setMode("register")}
             className={`flex-1 rounded-md px-3 py-2 transition-colors ${
-              !isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              !isLogin
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Register
@@ -89,6 +94,12 @@ export default function AuthForm() {
 
         {isLogin ? (
           <form className="mt-6 space-y-4" onSubmit={handleLoginSubmit}>
+            {loginError && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded">
+                {loginError}
+              </div>
+            )}
+
             <div className="space-y-1 text-left">
               <label className="text-sm font-medium text-gray-700">Email</label>
               <input
@@ -159,7 +170,9 @@ export default function AuthForm() {
                 type="password"
                 required
                 value={registerForm.password}
-                onChange={(e) => handleRegisterChange("password", e.target.value)}
+                onChange={(e) =>
+                  handleRegisterChange("password", e.target.value)
+                }
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100"
               />
             </div>

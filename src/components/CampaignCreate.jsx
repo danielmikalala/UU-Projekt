@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import { useCampaigns } from "../hooks/useCampaigns.js";
+import { useApi } from "../api/apiClient.js";
 
 export default function CampaignCreate() {
   const navigate = useNavigate();
   const { addCampaign } = useCampaigns();
+  const api = useApi();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -13,19 +15,32 @@ export default function CampaignCreate() {
     fundingGoal: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const categories = [
-    "Technology",
-    "Arts & Culture",
-    "Community",
-    "Education",
-    "Environment",
-    "Health & Medical",
-    "Sports & Recreation",
-    "Business & Entrepreneurship",
-    "Charity & Fundraising",
-    "Other",
-  ];
+  const [error, setError] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await api("/categories", { method: "GET" });
+        setCategories(categoriesData || []);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setCategories([
+          { _id: "1", name: "Technology" },
+          { _id: "2", name: "Arts & Culture" },
+          { _id: "3", name: "Community" },
+          { _id: "4", name: "Education" },
+          { _id: "5", name: "Environment" },
+          { _id: "6", name: "Health & Medical" },
+          { _id: "7", name: "Sports & Recreation" },
+          { _id: "8", name: "Business & Entrepreneurship" },
+          { _id: "9", name: "Charity & Fundraising" },
+          { _id: "10", name: "Other" },
+        ]);
+      }
+    };
+    fetchCategories();
+  }, [api]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -34,16 +49,66 @@ export default function CampaignCreate() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
+    setError("");
 
     try {
-      // Add campaign to context
-      const newCampaign = addCampaign(formData);
-      console.log("Campaign submitted for approval:", newCampaign);
+      const goalAmount = Number(formData.fundingGoal);
+      if (isNaN(goalAmount) || goalAmount <= 0) {
+        setError("Please enter a valid funding goal greater than 0.");
+        setIsSubmitting(false);
+        return;
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      let categoryId = undefined;
+      if (formData.category) {
+        const selectedCategory = categories.find(
+          (cat) => cat.name === formData.category,
+        );
+        if (selectedCategory?._id) {
+          categoryId = selectedCategory._id;
+        }
+      }
 
-      // Reset form
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + 30);
+
+      const campaignData = {
+        name: formData.title.trim(),
+        description: formData.description.trim(),
+        goalAmount: goalAmount,
+        deadLine: deadline.toISOString(),
+      };
+
+      if (categoryId) {
+        campaignData.categoryId = categoryId;
+      }
+
+      console.log(
+        "Sending campaign data to backend:",
+        JSON.stringify(campaignData, null, 2),
+      );
+      console.log("Data types:", {
+        name: typeof campaignData.name,
+        description: typeof campaignData.description,
+        goalAmount: typeof campaignData.goalAmount,
+        categoryId: campaignData.categoryId
+          ? typeof campaignData.categoryId
+          : "undefined",
+      });
+
+      try {
+        const result = await api("/projects", {
+          method: "POST",
+          body: campaignData,
+        });
+        console.log("Backend response:", result);
+      } catch (apiError) {
+        console.error("API Error details:", apiError);
+        throw apiError;
+      }
+
+      addCampaign(formData);
+
       setFormData({
         title: "",
         description: "",
@@ -51,10 +116,10 @@ export default function CampaignCreate() {
         fundingGoal: "",
       });
 
-      // Navigate back to managed campaigns page
-      navigate("/managed");
-    } catch (error) {
-      console.error("Error creating campaign:", error);
+      navigate("/home");
+    } catch (err) {
+      console.error("Error creating campaign:", err);
+      setError(err.message || "Failed to create campaign. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -69,7 +134,6 @@ export default function CampaignCreate() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campaign Title */}
             <div className="space-y-2">
               <label
                 htmlFor="title"
@@ -88,7 +152,6 @@ export default function CampaignCreate() {
               />
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <label
                 htmlFor="description"
@@ -109,7 +172,6 @@ export default function CampaignCreate() {
               />
             </div>
 
-            {/* Category */}
             <div className="space-y-2">
               <label
                 htmlFor="category"
@@ -119,21 +181,22 @@ export default function CampaignCreate() {
               </label>
               <select
                 id="category"
-                required
                 value={formData.category}
                 onChange={(e) => handleInputChange("category", e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-100 bg-white"
               >
-                <option value="">Select a category</option>
+                <option value="">Select a category (optional)</option>
                 {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
+                  <option
+                    key={category._id || category.id}
+                    value={category.name}
+                  >
+                    {category.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Funding Goal */}
             <div className="space-y-2">
               <label
                 htmlFor="fundingGoal"
@@ -156,7 +219,12 @@ export default function CampaignCreate() {
               />
             </div>
 
-            {/* Submit Button */}
+            {error && (
+              <div className="rounded-md bg-red-50 border border-red-200 p-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
             <div className="pt-4">
               <PrimaryButton
                 type="submit"
