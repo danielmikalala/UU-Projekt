@@ -1,27 +1,29 @@
-import {Link, useNavigate, useLocation} from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import PrimaryButton from "./buttons/PrimaryButton.jsx";
 import {
-    PlusIcon,
+
+  PlusIcon,
+
 } from "./buttons/icons";
 import { TbLogout2, TbSettings, TbBook } from "react-icons/tb";
-import {useAuth} from "../context/AuthContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Navigation() {
-    const {isAuthenticated, user, logout} = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    if (location.pathname.startsWith("/auth")) return null;
-    if (!isAuthenticated) return null;
+  if (location.pathname.startsWith("/auth")) return null;
+  if (!isAuthenticated) return null;
 
-    const handleLogout = () => {
-        logout();
-        navigate("/auth", {replace: true});
-    };
+  const handleLogout = () => {
+    logout();
+    navigate("/auth", { replace: true });
+  };
 
-    const handleCreateCampaign = () => {
-        navigate("/create");
-    };
+  const handleCreateCampaign = () => {
+    navigate("/create");
+  };
 
     return (
         <nav className="top-0 left-0 right-0 w-full border-b border-gray-200 bg-white">
